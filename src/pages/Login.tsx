@@ -29,7 +29,7 @@ const Login = () => {
       if (session.user.role === "admin") {
         navigate("/admin/workspace");
       } else {
-        navigate("/");
+        navigate("/dashboard");
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An error occurred");

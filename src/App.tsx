@@ -11,6 +11,14 @@ import AdminLogin from "./pages/AdminLogin";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import DashboardLayout from "./layouts/DashboardLayout";
+import PublicLayout from "./pages/public/components/Layout";
+import PublicDashboard from "./pages/public/Dashboard";
+import PublicBudget from "./pages/public/Budget";
+import PublicBuilder from "./pages/public/Builder";
+import PublicCommunity from "./pages/public/Community";
+import PublicItinerary from "./pages/public/Itinerary";
+import PublicNotes from "./pages/public/Notes";
+import PublicProfile from "./pages/public/Profile";
 import Applications from "./pages/Applications";
 import Settings from "./pages/Settings";
 import VerifyEmail from "./pages/VerifyEmail";
@@ -23,7 +31,7 @@ export default function App() {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <Router>
         <Routes>
-          {/* Public Routes */}
+          {/* Landing & Auth */}
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
@@ -34,6 +42,18 @@ export default function App() {
           {/* Admin Login */}
           <Route path="/admin/login" element={<AdminLogin />} />
           
+          {/* Public/User Dashboard Routes */}
+          <Route path="/dashboard" element={<PublicLayout />}>
+            <Route index element={<PublicDashboard />} />
+            <Route path="builder" element={<PublicBuilder />} />
+            <Route path="community" element={<PublicCommunity />} />
+            <Route path="itinerary" element={<PublicItinerary />} />
+            <Route path="budget" element={<PublicBudget />} />
+            <Route path="notes" element={<PublicNotes />} />
+            <Route path="profile" element={<PublicProfile />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+
           {/* Protected Admin Routes */}
           <Route path="/admin" element={<DashboardLayout />}>
             <Route path="home" element={<Home />} />
@@ -47,8 +67,7 @@ export default function App() {
             <Route index element={<Navigate to="workspace" replace />} />
           </Route>
 
-          {/* Compatibility & Fallbacks */}
-          <Route path="/dashboard" element={<Navigate to="/admin/workspace" replace />} />
+          {/* Fallbacks */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

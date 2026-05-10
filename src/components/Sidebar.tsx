@@ -52,6 +52,12 @@ const navigationConfig = [
     hasSubmenu: true,
     roles: ["admin"],
   },
+  {
+    title: "Explore",
+    path: "/dashboard",
+    icon: Home,
+    roles: ["public", "admin"],
+  },
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, activePath }) => {
