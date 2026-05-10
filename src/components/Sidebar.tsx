@@ -4,11 +4,11 @@ import {
   LayoutGrid,
   X,
   Home,
-  Briefcase,
-  Shield,
-  CheckCircle,
   ChevronDown,
   UserPlus,
+  Users,
+  BarChart3,
+  Map,
 } from "lucide-react";
 import { useAuth } from "../utils/auth";
 
@@ -21,15 +21,9 @@ interface SidebarProps {
 // Configuration for role-based access
 const navigationConfig = [
   {
-    title: "Home",
+    title: "Dashboard",
     path: "/admin/home",
     icon: Home,
-    roles: ["admin"],
-  },
-  {
-    title: "Workspace",
-    path: "/admin/workspace",
-    icon: Briefcase,
     roles: ["admin"],
   },
   {
@@ -39,23 +33,21 @@ const navigationConfig = [
     roles: ["admin"],
   },
   {
-    title: "Risk Management",
-    path: "/admin/risk-management",
-    icon: Shield,
-    hasSubmenu: true,
+    title: "User Management",
+    path: "/admin/users",
+    icon: Users,
     roles: ["admin"],
   },
   {
-    title: "Compliance",
-    path: "/admin/compliance",
-    icon: CheckCircle,
-    hasSubmenu: true,
+    title: "Trends & Analytics",
+    path: "/admin/analytics",
+    icon: BarChart3,
     roles: ["admin"],
   },
   {
     title: "Explore",
     path: "/dashboard",
-    icon: Home,
+    icon: Map,
     roles: ["public", "admin"],
   },
 ];
@@ -71,7 +63,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, activePath }) => {
   }: {
     title: string;
     path: string;
-    icon: any;
+    icon: React.ElementType;
     hasSubmenu?: boolean;
   }) => {
     const isActive = activePath === path;

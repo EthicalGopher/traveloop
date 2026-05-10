@@ -27,7 +27,7 @@ const Login = () => {
       
       // Redirect based on role
       if (session.user.role === "admin") {
-        navigate("/admin/workspace");
+        navigate("/admin");
       } else {
         navigate("/dashboard");
       }

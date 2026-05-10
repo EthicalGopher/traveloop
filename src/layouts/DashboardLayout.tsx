@@ -13,11 +13,10 @@ const DashboardLayout = () => {
   // Map route path to header title
   const getTitle = (path: string) => {
     switch (path) {
-      case "/admin/home": return "Home";
-      case "/admin/workspace": return "Workspace";
+      case "/admin/home": return "Dashboard";
       case "/admin/applications": return "Applications";
-      case "/admin/risk-management": return "Risk Management";
-      case "/admin/compliance": return "Compliance";
+      case "/admin/users": return "User Management";
+      case "/admin/analytics": return "Trends & Analytics";
       case "/admin/settings": return "Settings";
       default: return "Platform";
     }

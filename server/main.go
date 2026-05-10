@@ -48,6 +48,10 @@ func main() {
 	admin.Get("/applications/count", handlers.GetPendingApplicationsCount)
 	admin.Post("/applications/:id/approve", handlers.ApproveApplication)
 	admin.Post("/applications/:id/reject", handlers.RejectApplication)
+	admin.Get("/users", handlers.GetAllUsers)
+	admin.Get("/trips", handlers.GetAllTrips)
+	admin.Get("/analytics", handlers.GetAdminAnalytics)
+	admin.Get("/summary", handlers.GetAdminSummary)
 
 	// AI Routes
 	ai := app.Group("/ai", middleware.Auth)

@@ -25,11 +25,11 @@ const AdminLogin = () => {
       });
       
       if (session.user.role !== "admin") {
-        throw new Error("Access denied: Admin role required");
+        throw new Error("Unauthorized: You do not have administrative privileges");
       }
       
       saveSession(session);
-      navigate("/admin/workspace");
+      navigate("/admin");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {

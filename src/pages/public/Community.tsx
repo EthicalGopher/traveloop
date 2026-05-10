@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { 
   Upload, Flame, 
-  Star, Heart, Bookmark, X, MapPin, 
+  Star, X, MapPin, 
   Info, Plus, Loader2, Map as MapIcon, Search, ChevronDown, ListFilter
 } from "lucide-react";
 import { api } from "../../utils/api";
@@ -10,6 +10,7 @@ import { categories } from "../../data/travelData";
 import CreateTripModal from "./components/CreateTripModal";
 import SelectTripModal from "./components/SelectTripModal";
 import { motion, AnimatePresence } from "framer-motion";
+import { CommunityCard } from "./components/CommunityCard";
 
 interface ItineraryItem {
   activity: string;
@@ -125,79 +126,94 @@ export function Community() {
       <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar">
         <div className="max-w-[1280px] mx-auto w-full pb-20">
           {/* Share Your Trip Hero Section */}
-          <section className="mb-8 rounded-[2.5rem] overflow-hidden relative min-h-[350px] flex items-center shadow-md">
-            <img alt="Travel hero" className="absolute inset-0 w-full h-full object-cover z-0" src="https://images.unsplash.com/photo-1518599427670-6da42296d9da?q=80&w=2000&auto=format&fit=crop" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/90 to-transparent z-10"></div>
-            <div className="relative z-20 p-8 md:p-12 text-white max-w-2xl">
-              <h2 className="font-display text-5xl md:text-6xl font-black mb-4 italic tracking-tight uppercase">Share Your Journey</h2>
-              <p className="font-body text-lg text-white/80 mb-8 max-w-lg italic leading-relaxed">Inspire the Traveloop community. Upload your detailed itineraries, hidden gems, and travel tips to help others plan their perfect trip.</p>
-              <button 
-                onClick={openSelectTrip}
-                className="bg-primary text-on-primary px-8 py-4 rounded-xl font-label text-sm font-black uppercase tracking-widest hover:bg-surface-tint transition-all shadow-lg flex items-center gap-3 active:scale-95"
+          <section className="mb-10 rounded-[3rem] overflow-hidden relative min-h-[400px] flex items-center shadow-2xl group/hero">
+            <img alt="Travel community" className="absolute inset-0 w-full h-full object-cover z-0 group-hover/hero:scale-105 transition-transform duration-[3s] ease-out" src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent z-10"></div>
+            
+            {/* Animated Mesh Gradient Overlay */}
+            <div className="absolute inset-0 z-10 opacity-30 mix-blend-overlay pointer-events-none">
+              <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/40 rounded-full blur-[120px] animate-pulse"></div>
+              <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-secondary/40 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+            </div>
+
+            <div className="relative z-20 p-10 md:p-16 text-white max-w-2xl">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6 }}
               >
-                <Upload className="w-5 h-5" />
-                Share Itinerary
-              </button>
+                <h2 className="font-display text-5xl md:text-7xl font-black mb-6 italic tracking-tighter uppercase leading-[0.9]">
+                  Explore the <br />
+                  <span className="text-primary-fixed">Unexplored</span>
+                </h2>
+                <p className="font-body text-xl text-white/70 mb-10 max-w-lg italic leading-relaxed">
+                  Join a global community of travelers. Discover hidden gems, share your legendary routes, and inspire your next great adventure.
+                </p>
+                <button 
+                  onClick={openSelectTrip}
+                  className="bg-primary text-on-primary px-10 py-5 rounded-2xl font-label text-sm font-black uppercase tracking-[0.2em] hover:bg-surface-tint hover:shadow-primary/40 transition-all shadow-xl flex items-center gap-4 active:scale-95 group"
+                >
+                  <Upload className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
+                  Share Your Story
+                </button>
+              </motion.div>
             </div>
           </section>
 
           {/* Search & Sort Bar - Just below banner */}
-          <section className="relative group max-w-4xl mx-auto w-full -mt-10 z-20 px-4 md:px-0 mb-12">
-            <div className="absolute inset-0 bg-primary/20 rounded-[2rem] blur-2xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
-            <div className="relative bg-surface-canvas rounded-[2rem] p-2 shadow-2xl border border-border-subtle flex flex-col sm:flex-row items-center gap-2">
-              <div className="flex-1 flex items-center px-6 gap-3 w-full">
+          <section className="relative group max-w-4xl mx-auto w-full -mt-12 z-20 px-4 md:px-0 mb-16">
+            <div className="absolute inset-0 bg-primary/20 rounded-[2.5rem] blur-3xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-700"></div>
+            <div className="relative bg-surface-canvas/80 backdrop-blur-2xl rounded-[2.5rem] p-3 shadow-2xl border border-white/20 flex flex-col sm:flex-row items-center gap-2">
+              <div className="flex-1 flex items-center px-8 gap-4 w-full">
                 <Search className="text-primary w-6 h-6" />
                 <input 
                   type="text" 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search community stories..."
-                  className="w-full py-4 text-lg font-headline font-bold focus:outline-none placeholder:text-text-secondary/30 text-text-primary bg-transparent"
+                  placeholder="Where to next? Search stories..."
+                  className="w-full py-5 text-xl font-headline font-bold focus:outline-none placeholder:text-text-secondary/40 text-text-primary bg-transparent"
                 />
               </div>
               
-              <div className="flex items-center gap-2 w-full sm:w-auto px-2 sm:px-0 sm:pr-4 border-t sm:border-t-0 sm:border-l border-border-subtle/50 pt-2 sm:pt-0">
-                 <div className="relative flex-1 sm:flex-none min-w-[140px]">
-                    <ListFilter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
+              <div className="flex items-center gap-3 w-full sm:w-auto px-3 sm:px-0 sm:pr-5 border-t sm:border-t-0 sm:border-l border-border-subtle/30 pt-3 sm:pt-0">
+                 <div className="relative flex-1 sm:flex-none min-w-[160px]">
+                    <ListFilter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
                     <select 
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="w-full bg-surface-background border border-border-subtle rounded-xl pl-9 pr-8 py-2.5 text-xs font-black uppercase tracking-widest focus:ring-2 focus:ring-primary outline-none appearance-none cursor-pointer"
+                      className="w-full bg-surface-background/50 border border-border-subtle/50 rounded-2xl pl-11 pr-10 py-3.5 text-xs font-black uppercase tracking-widest focus:ring-2 focus:ring-primary/50 outline-none appearance-none cursor-pointer"
                     >
                       <option>Newest</option>
                       <option>Popularity</option>
                       <option>Bookmarks</option>
                       <option>Rating</option>
                     </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" />
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" />
                  </div>
-                 <button className="bg-primary text-on-primary px-8 py-2.5 rounded-xl font-label text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg hidden md:block">
-                  Search
-                 </button>
               </div>
             </div>
           </section>
 
           {/* Filters */}
-          <div className="flex items-center gap-3 overflow-x-auto pb-4 mb-8 no-scrollbar">
+          <div className="flex items-center gap-4 overflow-x-auto pb-6 mb-12 no-scrollbar px-2">
             <button 
               onClick={() => setSelectedCategory("All")}
-              className={`flex items-center gap-2 px-6 py-2 rounded-full font-label text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-sm border ${
+              className={`flex items-center gap-3 px-8 py-3 rounded-2xl font-label text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-all shadow-md border ${
                 selectedCategory === "All" 
-                  ? 'bg-primary text-on-primary border-primary' 
-                  : 'bg-surface-canvas text-text-primary border-border-subtle hover:border-primary/50'
+                  ? 'bg-primary text-on-primary border-primary shadow-primary/20' 
+                  : 'bg-surface-canvas text-text-primary border-border-subtle hover:border-primary/40 hover:bg-primary/5'
               }`}
             >
-              <Flame className="w-4 h-4 fill-current" /> Trending
+              <Flame className={`w-4 h-4 ${selectedCategory === "All" ? 'fill-current' : ''}`} /> Trending
             </button>
             {categories.filter(c => c !== "All").map(category => (
               <button 
                 key={category} 
                 onClick={() => setSelectedCategory(category)}
-                className={`flex items-center gap-2 px-6 py-2 rounded-full font-label text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-sm border ${
+                className={`flex items-center gap-3 px-8 py-3 rounded-2xl font-label text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-all shadow-md border ${
                   selectedCategory === category 
-                    ? 'bg-primary text-on-primary border-primary' 
-                    : 'bg-surface-canvas text-text-primary border-border-subtle hover:border-primary/50'
+                    ? 'bg-primary text-on-primary border-primary shadow-primary/20' 
+                    : 'bg-surface-canvas text-text-primary border-border-subtle hover:border-primary/40 hover:bg-primary/5'
                 }`}
               >
                 {category}
@@ -205,10 +221,13 @@ export function Community() {
             ))}
           </div>
 
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="font-headline text-3xl font-black text-on-surface italic uppercase tracking-tighter">Community Stories</h3>
-            <span className="text-xs font-black font-label text-primary uppercase tracking-widest bg-primary/5 px-4 py-1.5 rounded-full border border-primary/10">
-              {processedStories.length} results found
+          <div className="flex items-end justify-between mb-10 px-2">
+            <div className="space-y-1">
+              <h3 className="font-headline text-4xl font-black text-on-surface italic uppercase tracking-tighter leading-none">Community Stories</h3>
+              <p className="font-body text-sm text-text-secondary opacity-60">Verified itineraries from our global explorers</p>
+            </div>
+            <span className="text-[10px] font-black font-label text-primary uppercase tracking-[0.2em] bg-primary/5 px-6 py-2.5 rounded-2xl border border-primary/20">
+              {processedStories.length} stories
             </span>
           </div>
 
@@ -217,63 +236,15 @@ export function Community() {
               <Loader2 className="w-10 h-10 text-primary animate-spin" />
             </div>
           ) : processedStories.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10 lg:gap-12">
               {processedStories.map((dest) => (
-                <motion.div 
-                  key={dest.id} 
-                  layoutId={`dest-${dest.id}`}
+                <CommunityCard 
+                  key={dest.id}
+                  dest={dest}
+                  onLike={handleLike}
+                  onBookmark={handleBookmark}
                   onClick={() => setSelectedDest(dest)}
-                  whileHover={{ y: -10 }}
-                  className="bg-surface-canvas rounded-[2.5rem] border border-border-subtle overflow-hidden shadow-sm hover:shadow-2xl transition-all group cursor-pointer flex flex-col h-[500px]"
-                >
-                  <div className="relative h-2/3 overflow-hidden shrink-0">
-                    <img alt={dest.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src={dest.image || "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2000&auto=format&fit=crop"} />
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1.5 flex items-center justify-center shadow-md gap-1.5 border border-white/20">
-                      <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                      <span className="text-xs font-black text-on-surface">{dest.rating.toFixed(1)}</span>
-                    </div>
-                    <div className="absolute bottom-4 left-4">
-                      <span className="bg-primary text-on-primary px-4 py-1.5 rounded-full text-[10px] font-black uppercase italic tracking-widest shadow-lg">
-                        {dest.category || "Adventure"}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-8 flex flex-1 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-headline text-2xl font-black text-on-surface truncate pr-4 uppercase">{dest.title}</h4>
-                      </div>
-                      <p className="font-body text-sm text-text-secondary line-clamp-2 leading-relaxed italic opacity-80">Explore {dest.destination}.</p>
-                    </div>
-                    <div className="flex items-center justify-between pt-6 border-t border-border-subtle/50">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-xs border border-primary/20 shadow-sm shrink-0 uppercase">
-                          {dest.user?.full_name ? dest.user.full_name[0] : "?"}
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                          <span className="font-label text-[10px] font-black uppercase text-on-surface truncate">{dest.user?.full_name || "Traveler"}</span>
-                          <span className="font-body text-[10px] text-text-secondary">{new Date(dest.created_at).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4 text-text-secondary">
-                        <button 
-                          onClick={(e) => handleLike(e, dest.id)}
-                          className={`flex items-center gap-1.5 transition-all group/btn hover:scale-110 ${dest.likes_count > 0 ? 'text-red-500' : ''}`}
-                        >
-                          <Heart className={`w-5 h-5 ${dest.likes_count > 0 ? 'fill-red-500 shadow-lg' : ''}`} />
-                          <span className="text-[10px] font-bold">{dest.likes_count}</span>
-                        </button>
-                        <button 
-                          onClick={(e) => handleBookmark(e, dest.id)}
-                          className={`flex items-center gap-1.5 transition-all group/btn hover:scale-110 ${dest.bookmarks_count > 0 ? 'text-primary' : ''}`}
-                        >
-                          <Bookmark className={`w-5 h-5 ${dest.bookmarks_count > 0 ? 'fill-primary shadow-lg' : ''}`} />
-                          <span className="text-[10px] font-bold">{dest.bookmarks_count}</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
+                />
               ))}
             </div>
           ) : (

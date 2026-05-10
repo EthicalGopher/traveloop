@@ -9,7 +9,6 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import AdminLogin from "./pages/AdminLogin";
 import Signup from "./pages/Signup";
-import Dashboard from "./pages/Dashboard";
 import DashboardLayout from "./layouts/DashboardLayout";
 import PublicLayout from "./pages/public/components/Layout";
 import PublicDashboard from "./pages/public/Dashboard";
@@ -20,11 +19,13 @@ import PublicItinerary from "./pages/public/Itinerary";
 import PublicNotes from "./pages/public/Notes";
 import PublicProfile from "./pages/public/Profile";
 import Applications from "./pages/Applications";
+import AdminHome from "./pages/admin/Home";
+import AdminUsers from "./pages/admin/Users";
+import AdminAnalytics from "./pages/admin/Analytics";
 import Settings from "./pages/Settings";
 import VerifyEmail from "./pages/VerifyEmail";
 import ResetPassword from "./pages/ResetPassword";
 import ConfirmEmailChange from "./pages/ConfirmEmailChange";
-import { Home, RiskManagement, Compliance } from "./pages/PlaceholderPages";
 
 export default function App() {
   return (
@@ -56,15 +57,14 @@ export default function App() {
 
           {/* Protected Admin Routes */}
           <Route path="/admin" element={<DashboardLayout />}>
-            <Route path="home" element={<Home />} />
-            <Route path="workspace" element={<Dashboard />} />
+            <Route path="home" element={<AdminHome />} />
             <Route path="applications" element={<Applications />} />
-            <Route path="risk-management" element={<RiskManagement />} />
-            <Route path="compliance" element={<Compliance />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="analytics" element={<AdminAnalytics />} />
             <Route path="settings" element={<Settings />} />
             
             {/* Default admin redirect */}
-            <Route index element={<Navigate to="workspace" replace />} />
+            <Route index element={<Navigate to="home" replace />} />
           </Route>
 
           {/* Fallbacks */}

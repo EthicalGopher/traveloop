@@ -98,7 +98,7 @@ export function Itinerary() {
         image: data.image,
         category: data.category
       });
-    } catch (_err) {
+    } catch {
       console.error("Failed to fetch trip details");
     } finally {
       setDetailsLoading(false);
@@ -113,9 +113,10 @@ export function Itinerary() {
         if (data.length > 0 && !selectedTrip) {
           fetchTripDetails(data[0].id);
         }
-      } catch (_err) {
+      } catch {
         console.error("Failed to fetch trips");
       }
+
     };
     if (isAuthenticated) fetchTrips();
   }, [isAuthenticated, selectedTrip, fetchTripDetails]);
@@ -146,7 +147,7 @@ export function Itinerary() {
       setEditingItem(null);
       setItineraryForm({ day: 1, time: "09:00 AM", activity: "", location: "", type: "activity", notes: "" });
       fetchTripDetails(selectedTrip.id);
-    } catch (_err) {
+    } catch {
       alert("Failed to save itinerary item");
     }
   };
@@ -156,7 +157,7 @@ export function Itinerary() {
     try {
       await api(`/trips/itinerary/${itemId}`, { method: "DELETE" });
       if (selectedTrip) fetchTripDetails(selectedTrip.id);
-    } catch (_err) {
+    } catch {
       alert("Failed to delete item");
     }
   };
@@ -174,7 +175,7 @@ export function Itinerary() {
       fetchTripDetails(selectedTrip.id);
       const data = await api("/trips");
       setTrips(data);
-    } catch (_err) {
+    } catch {
       alert("Failed to update trip");
     }
   };
@@ -186,7 +187,7 @@ export function Itinerary() {
       await api(`/trips/${id}`, { method: "DELETE" });
       setTrips(prev => prev.filter(t => t.id !== id));
       if (selectedTrip?.id === id) setSelectedTrip(null);
-    } catch (_err) {
+    } catch {
       alert("Failed to delete trip");
     }
   };
@@ -198,7 +199,7 @@ export function Itinerary() {
       const res = await api(`/trips/${selectedTrip.id}/share`, { method: "PUT" });
       setSelectedTrip({ ...selectedTrip, is_public: res.is_public });
       setTrips(prev => prev.map(t => t.id === selectedTrip.id ? { ...t, is_public: res.is_public } : t));
-    } catch (_err) {
+    } catch {
       alert("Failed to update share status");
     } finally {
       setIsSharing(false);
