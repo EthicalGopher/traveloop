@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { 
-  Upload, Flame, Mountain, PiggyBank, Baby, Utensils, 
-  SlidersHorizontal, Star, Heart, Bookmark, X, MapPin, 
-  Info, Plus, Loader2, Map as MapIcon
+  Upload, Flame, 
+  Star, Heart, Bookmark, X, MapPin, 
+  Info, Plus, Loader2, Map as MapIcon, Search
 } from "lucide-react";
 import { api } from "../../utils/api";
 import { useAuth } from "../../utils/auth";
+import { categories } from "../../data/travelData";
 import CreateTripModal from "./components/CreateTripModal";
 import SelectTripModal from "./components/SelectTripModal";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,11 +29,12 @@ interface PublicTrip {
   image?: string;
   category?: string;
   rating: number;
-  likes: number;
-  bookmarks: number;
+  likes_count: number;
+  bookmarks_count: number;
   created_at: string;
   itineraries?: ItineraryItem[];
   map_url?: string;
+  description?: string;
 }
 
 export function Community() {
@@ -42,6 +44,10 @@ export function Community() {
   const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
   const [publicTrips, setPublicTrips] = useState<PublicTrip[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Search and Filter State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   const fetchPublicTrips = async () => {
     try {
@@ -61,8 +67,8 @@ export function Community() {
   const handleLike = async (e: React.MouseEvent, id: string | number) => {
     e.stopPropagation();
     try {
-      await api(`/community/trips/${id}/like`, { method: "POST" });
-      setPublicTrips(prev => prev.map(t => t.id === id ? { ...t, likes: t.likes + 1 } : t));
+      const res = await api(`/community/trips/${id}/like`, { method: "POST" });
+      setPublicTrips(prev => prev.map(t => t.id === id ? { ...t, likes_count: res.likes_count } : t));
     } catch {
       alert("Failed to like trip");
     }
@@ -71,8 +77,8 @@ export function Community() {
   const handleBookmark = async (e: React.MouseEvent, id: string | number) => {
     e.stopPropagation();
     try {
-      await api(`/community/trips/${id}/bookmark`, { method: "POST" });
-      setPublicTrips(prev => prev.map(t => t.id === id ? { ...t, bookmarks: t.bookmarks + 1 } : t));
+      const res = await api(`/community/trips/${id}/bookmark`, { method: "POST" });
+      setPublicTrips(prev => prev.map(t => t.id === id ? { ...t, bookmarks_count: res.bookmarks_count } : t));
     } catch {
       alert("Failed to bookmark trip");
     }
@@ -82,18 +88,28 @@ export function Community() {
     setIsSelectModalOpen(true);
   };
 
+  // Filtered Community Stories Logic
+  const filteredStories = useMemo(() => {
+    return publicTrips.filter(story => {
+      const matchesCategory = selectedCategory === "All" || story.category === selectedCategory;
+      const matchesSearch = story.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                           story.destination.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [searchQuery, selectedCategory, publicTrips]);
+
   return (
     <div className="flex flex-col h-full overflow-hidden bg-surface-background">
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar">
-        <div className="max-w-[1280px] mx-auto w-full">
+        <div className="max-w-[1280px] mx-auto w-full pb-20">
           {/* Share Your Trip Hero Section */}
-          <section className="mb-8 rounded-2xl overflow-hidden relative min-h-[350px] flex items-center shadow-md">
+          <section className="mb-8 rounded-[2.5rem] overflow-hidden relative min-h-[350px] flex items-center shadow-md">
             <img alt="Travel hero" className="absolute inset-0 w-full h-full object-cover z-0" src="https://images.unsplash.com/photo-1518599427670-6da42296d9da?q=80&w=2000&auto=format&fit=crop" />
             <div className="absolute inset-0 bg-gradient-to-r from-black/90 to-transparent z-10"></div>
             <div className="relative z-20 p-8 md:p-12 text-white max-w-2xl">
               <h2 className="font-display text-5xl md:text-6xl font-black mb-4 italic tracking-tight uppercase">Share Your Journey</h2>
-              <p className="font-body text-lg text-white/80 mb-8 max-w-lg">Inspire the Traveloop community. Upload your detailed itineraries, hidden gems, and travel tips to help others plan their perfect trip.</p>
+              <p className="font-body text-lg text-white/80 mb-8 max-w-lg italic leading-relaxed">Inspire the Traveloop community. Upload your detailed itineraries, hidden gems, and travel tips to help others plan their perfect trip.</p>
               <button 
                 onClick={openSelectTrip}
                 className="bg-primary text-on-primary px-8 py-4 rounded-xl font-label text-sm font-black uppercase tracking-widest hover:bg-surface-tint transition-all shadow-lg flex items-center gap-3 active:scale-95"
@@ -104,88 +120,117 @@ export function Community() {
             </div>
           </section>
 
+          {/* Search Bar - Just below banner */}
+          <section className="relative group max-w-3xl mx-auto w-full -mt-10 z-20 px-4 md:px-0 mb-12">
+            <div className="absolute inset-0 bg-primary/20 rounded-[2rem] blur-2xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
+            <div className="relative bg-surface-canvas rounded-[2rem] p-2 shadow-2xl border border-border-subtle flex items-center gap-2">
+              <div className="flex-1 flex items-center px-6 gap-3 border-r border-border-subtle/50">
+                <Search className="text-primary w-6 h-6" />
+                <input 
+                  type="text" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search community stories..."
+                  className="w-full py-4 text-lg font-headline font-bold focus:outline-none placeholder:text-text-secondary/30 text-text-primary bg-transparent"
+                />
+              </div>
+              <button className="bg-primary text-on-primary px-10 py-4 rounded-[1.5rem] font-label text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg hidden sm:block">
+                Search
+              </button>
+            </div>
+          </section>
+
           {/* Filters */}
-          <div className="flex items-center gap-4 overflow-x-auto pb-4 mb-8 hide-scrollbar">
-            <button className="flex items-center gap-2 px-6 py-2 rounded-full bg-primary text-on-primary font-label text-xs font-bold whitespace-nowrap shadow-sm">
+          <div className="flex items-center gap-3 overflow-x-auto pb-4 mb-8 no-scrollbar">
+            <button 
+              onClick={() => setSelectedCategory("All")}
+              className={`flex items-center gap-2 px-6 py-2 rounded-full font-label text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-sm border ${
+                selectedCategory === "All" 
+                  ? 'bg-primary text-on-primary border-primary' 
+                  : 'bg-surface-canvas text-text-primary border-border-subtle hover:border-primary/50'
+              }`}
+            >
               <Flame className="w-4 h-4 fill-current" /> Trending
             </button>
-            {[
-              { icon: Mountain, label: "Adventure" },
-              { icon: PiggyBank, label: "Budget" },
-              { icon: Baby, label: "Family" },
-              { icon: Utensils, label: "Culinary" }
-            ].map(filter => (
-              <button key={filter.label} className="flex items-center gap-2 px-6 py-2 rounded-full bg-surface-canvas text-on-surface-variant border border-border-subtle hover:border-primary font-label text-xs font-bold whitespace-nowrap transition-all shadow-xs">
-                <filter.icon className="w-4 h-4" /> {filter.label}
+            {categories.filter(c => c !== "All").map(category => (
+              <button 
+                key={category} 
+                onClick={() => setSelectedCategory(category)}
+                className={`flex items-center gap-2 px-6 py-2 rounded-full font-label text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-sm border ${
+                  selectedCategory === category 
+                    ? 'bg-primary text-on-primary border-primary' 
+                    : 'bg-surface-canvas text-text-primary border-border-subtle hover:border-primary/50'
+                }`}
+              >
+                {category}
               </button>
             ))}
-            <button className="flex items-center gap-2 px-6 py-2 rounded-full bg-surface-canvas text-on-surface-variant border border-border-subtle hover:bg-primary font-label text-xs font-bold whitespace-nowrap transition-all shadow-xs">
-              <SlidersHorizontal className="w-4 h-4" /> More Filters
-            </button>
           </div>
 
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-8">
             <h3 className="font-headline text-3xl font-black text-on-surface italic uppercase tracking-tighter">Community Stories</h3>
-            <span className="text-sm font-label font-bold text-text-secondary">{publicTrips.length} results found</span>
+            <span className="text-xs font-black font-label text-primary uppercase tracking-widest bg-primary/5 px-4 py-1.5 rounded-full border border-primary/10">
+              {filteredStories.length} results found
+            </span>
           </div>
 
           {loading ? (
             <div className="flex justify-center py-20">
               <Loader2 className="w-10 h-10 text-primary animate-spin" />
             </div>
-          ) : publicTrips.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
-              {publicTrips.map((dest) => (
+          ) : filteredStories.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              {filteredStories.map((dest) => (
                 <motion.div 
                   key={dest.id} 
                   layoutId={`dest-${dest.id}`}
                   onClick={() => setSelectedDest(dest)}
                   whileHover={{ y: -10 }}
-                  className="bg-surface-canvas rounded-[2.5rem] border border-border-subtle overflow-hidden shadow-sm hover:shadow-xl transition-all group cursor-pointer flex flex-col h-[480px]"
+                  className="bg-surface-canvas rounded-[2.5rem] border border-border-subtle overflow-hidden shadow-sm hover:shadow-2xl transition-all group cursor-pointer flex flex-col h-[500px]"
                 >
-                  <div className="relative h-2/3 overflow-hidden">
+                  <div className="relative h-2/3 overflow-hidden shrink-0">
                     <img alt={dest.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src={dest.image || "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2000&auto=format&fit=crop"} />
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full w-14 h-10 flex items-center justify-center shadow-md gap-1">
-                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                      <span className="text-xs font-black text-on-surface">{dest.rating > 0 ? dest.rating.toFixed(1) : "N/A"}</span>
+                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1.5 flex items-center justify-center shadow-md gap-1.5 border border-white/20">
+                      <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                      <span className="text-xs font-black text-on-surface">{dest.rating.toFixed(1)}</span>
                     </div>
                     <div className="absolute bottom-4 left-4">
-                      <span className="bg-primary text-on-primary px-4 py-1 rounded-full text-[10px] font-black uppercase italic tracking-widest shadow-sm">
+                      <span className="bg-primary text-on-primary px-4 py-1.5 rounded-full text-[10px] font-black uppercase italic tracking-widest shadow-lg">
                         {dest.category || "Adventure"}
                       </span>
                     </div>
                   </div>
-                  <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div className="p-8 flex flex-1 flex flex-col justify-between">
                     <div>
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-3">
                         <h4 className="font-headline text-2xl font-black text-on-surface truncate pr-4 uppercase">{dest.title}</h4>
                       </div>
-                      <p className="font-body text-sm text-text-secondary line-clamp-2 leading-relaxed italic">Explore {dest.destination}.</p>
+                      <p className="font-body text-sm text-text-secondary line-clamp-2 leading-relaxed italic opacity-80">Explore {dest.destination}.</p>
                     </div>
-                    <div className="flex items-center justify-between pt-4 border-t border-border-subtle/50">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-black text-xs border border-border-subtle">
+                    <div className="flex items-center justify-between pt-6 border-t border-border-subtle/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-xs border border-primary/20 shadow-sm shrink-0 uppercase">
                           {dest.user?.full_name ? dest.user.full_name[0] : "?"}
                         </div>
-                        <div className="flex flex-col">
-                          <span className="font-label text-[10px] font-black uppercase text-on-surface">{dest.user?.full_name || "Traveler"}</span>
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-label text-[10px] font-black uppercase text-on-surface truncate">{dest.user?.full_name || "Traveler"}</span>
                           <span className="font-body text-[10px] text-text-secondary">{new Date(dest.created_at).toLocaleDateString()}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-4 text-text-secondary">
                         <button 
                           onClick={(e) => handleLike(e, dest.id)}
-                          className="flex items-center gap-1 hover:text-red-500 transition-colors group/btn"
+                          className={`flex items-center gap-1.5 transition-all group/btn hover:scale-110 ${dest.likes_count > 0 ? 'text-red-500' : ''}`}
                         >
-                          <Heart className={`w-4 h-4 ${dest.likes > 0 ? 'fill-red-500 text-red-500' : ''}`} />
-                          <span className="text-[10px] font-bold">{dest.likes}</span>
+                          <Heart className={`w-5 h-5 ${dest.likes_count > 0 ? 'fill-red-500 shadow-lg' : ''}`} />
+                          <span className="text-xs font-black">{dest.likes_count}</span>
                         </button>
                         <button 
                           onClick={(e) => handleBookmark(e, dest.id)}
-                          className="flex items-center gap-1 hover:text-primary transition-colors group/btn"
+                          className={`flex items-center gap-1.5 transition-all group/btn hover:scale-110 ${dest.bookmarks_count > 0 ? 'text-primary' : ''}`}
                         >
-                          <Bookmark className={`w-4 h-4 ${dest.bookmarks > 0 ? 'fill-primary text-primary' : ''}`} />
-                          <span className="text-[10px] font-bold">{dest.bookmarks}</span>
+                          <Bookmark className={`w-5 h-5 ${dest.bookmarks_count > 0 ? 'fill-primary shadow-lg' : ''}`} />
+                          <span className="text-xs font-black">{dest.bookmarks_count}</span>
                         </button>
                       </div>
                     </div>
@@ -194,9 +239,16 @@ export function Community() {
               ))}
             </div>
           ) : (
-            <div className="py-20 text-center bg-surface-canvas rounded-[3rem] border-2 border-dashed border-border-subtle">
-               <Upload className="w-12 h-12 text-text-secondary mx-auto mb-4 opacity-20" />
-               <p className="text-text-secondary italic font-body">No community stories yet. Be the first to share!</p>
+            <div className="py-32 text-center bg-surface-canvas rounded-[4rem] border-2 border-dashed border-border-subtle flex flex-col items-center">
+               <Search className="w-16 h-16 text-text-secondary mb-6 opacity-10" />
+               <h3 className="font-headline text-2xl font-black text-on-surface uppercase opacity-30 italic">No community stories found</h3>
+               <p className="font-body text-sm text-text-secondary mt-2 opacity-50">Try different keywords or be the first to share an itinerary!</p>
+               <button 
+                onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }}
+                className="mt-8 text-primary font-label text-xs font-black uppercase tracking-[0.2em] hover:underline"
+              >
+                Reset All Filters
+              </button>
             </div>
           )}
         </div>
@@ -215,7 +267,7 @@ export function Community() {
             />
             <motion.div 
               layoutId={`dest-${selectedDest.id}`}
-              className="relative bg-surface-canvas w-full max-w-5xl rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[90vh]"
+              className="relative bg-surface-canvas w-full max-w-6xl rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[90vh]"
             >
               <button 
                 onClick={() => setSelectedDest(null)}
@@ -224,41 +276,41 @@ export function Community() {
                 <X size={24} />
               </button>
 
-              <div className="w-full md:w-1/2 h-64 md:h-auto overflow-hidden">
+              <div className="w-full md:w-1/2 h-80 md:h-auto overflow-hidden">
                 <img src={selectedDest.image || "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2000&auto=format&fit=crop"} alt={selectedDest.title} className="w-full h-full object-cover" />
               </div>
 
-              <div className="flex-1 p-8 md:p-12 flex flex-col h-full overflow-y-auto custom-scrollbar">
-                <div className="mb-8">
-                  <span className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-xs font-black uppercase italic tracking-widest mb-4 inline-block">
+              <div className="flex-1 p-10 md:p-14 flex flex-col h-full overflow-y-auto custom-scrollbar">
+                <div className="mb-10">
+                  <span className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-[10px] font-black uppercase italic tracking-widest mb-4 inline-block">
                     {selectedDest.category || "Adventure"}
                   </span>
-                  <h2 className="font-display text-4xl md:text-5xl font-black text-on-surface mb-2 leading-tight uppercase italic">{selectedDest.title}</h2>
-                  <div className="flex items-center gap-6 mt-4">
+                  <h2 className="font-display text-4xl md:text-5xl font-black text-on-surface mb-3 leading-tight uppercase italic">{selectedDest.title}</h2>
+                  <div className="flex items-center gap-8 mt-6">
                      <div className="flex items-center gap-2 text-yellow-500">
-                       <Star size={20} fill="currentColor" />
-                       <span className="font-display text-xl font-bold">{selectedDest.rating > 0 ? selectedDest.rating.toFixed(1) : "No Rating"}</span>
+                       <Star size={24} fill="currentColor" />
+                       <span className="font-display text-2xl font-bold">{selectedDest.rating.toFixed(1)}</span>
                      </div>
                      <div className="flex items-center gap-2 text-text-secondary">
-                        <MapPin size={20} />
+                        <MapPin size={24} />
                         <span className="font-label text-sm font-bold uppercase tracking-wider">{selectedDest.destination}</span>
                      </div>
                   </div>
                 </div>
 
-                <div className="space-y-6 flex-1">
+                <div className="space-y-8 flex-1">
                   <section>
-                    <h3 className="font-headline text-lg font-black text-on-surface uppercase mb-3 flex items-center gap-2 italic">
-                       <Info size={18} className="text-primary" />
-                       Itinerary Highlights
+                    <h3 className="font-headline text-lg font-black text-on-surface uppercase mb-4 flex items-center gap-3 italic">
+                       <Info size={20} className="text-primary" />
+                       Journey Breakdown
                     </h3>
                     <div className="space-y-4">
-                      {selectedDest.itineraries?.slice(0, 3).map((item: ItineraryItem, i: number) => (
-                        <div key={i} className="flex gap-4 p-4 rounded-2xl bg-surface-background border border-border-subtle/50">
-                           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">{i+1}</div>
-                           <div>
-                              <p className="font-headline text-sm font-bold text-text-primary uppercase">{item.activity}</p>
-                              <p className="font-body text-xs text-text-secondary">{item.location}</p>
+                      {selectedDest.itineraries?.slice(0, 5).map((item, i) => (
+                        <div key={i} className="flex gap-5 p-5 rounded-[1.5rem] bg-surface-background border border-border-subtle/50 shadow-sm">
+                           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-sm shrink-0 border border-primary/20">{i+1}</div>
+                           <div className="min-w-0">
+                              <p className="font-headline text-base font-bold text-text-primary uppercase truncate">{item.activity}</p>
+                              <p className="font-body text-xs text-text-secondary mt-0.5 truncate">{item.location}</p>
                            </div>
                         </div>
                       ))}
@@ -268,27 +320,27 @@ export function Community() {
                     </div>
                   </section>
 
-                  <section className="bg-primary/5 p-8 rounded-[2rem] border border-primary/10 mt-8 relative overflow-hidden">
-                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16"></div>
-                     <h4 className="font-headline text-base font-black text-primary uppercase mb-2 italic">Ready for this adventure?</h4>
-                     <p className="font-body text-sm text-text-secondary mb-6">Create a personalized trip based on this community favorite and start planning today.</p>
-                     <div className="flex flex-col sm:flex-row gap-3">
+                  <section className="bg-primary/5 p-10 rounded-[2.5rem] border border-primary/10 mt-10 relative overflow-hidden">
+                     <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full -mr-20 -mt-20"></div>
+                     <h4 className="font-headline text-xl font-black text-primary uppercase mb-3 italic">Plan This Adventure</h4>
+                     <p className="font-body text-base text-text-secondary mb-8 leading-relaxed">Create a personalized trip based on this community favorite and start mapping your path today.</p>
+                     <div className="flex flex-col sm:flex-row gap-4">
                         <button 
                             onClick={() => {
                               setIsCreateModalOpen(true);
                             }}
                             className="flex-1 bg-primary text-on-primary py-4 rounded-xl font-label text-sm font-black uppercase tracking-widest hover:shadow-primary/40 transition-all flex items-center justify-center gap-3 shadow-lg shadow-primary/20 active:scale-[0.98]"
                         >
-                          <Plus size={20} />
+                          <Plus size={22} />
                           Add to My Trips
                         </button>
                         <a 
                             href={selectedDest.map_url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedDest.title)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-6 bg-white text-[#1a73e8] border border-[#1a73e8] py-4 rounded-xl font-label text-sm font-black uppercase tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+                            className="px-8 bg-white text-[#1a73e8] border border-[#1a73e8]/30 py-4 rounded-xl font-label text-sm font-black uppercase tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-3 active:scale-[0.98] shadow-sm"
                         >
-                          <MapIcon size={20} />
+                          <MapIcon size={22} />
                           Map
                         </a>
                      </div>

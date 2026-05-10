@@ -19,8 +19,8 @@ type Trip struct {
 	MapURL      string         `json:"map_url"`
 	IsPublic    bool           `gorm:"default:false" json:"is_public"`
 	Rating      float64        `gorm:"default:0" json:"rating"`
-	Likes       int            `gorm:"default:0" json:"likes"`
-	Bookmarks   int            `gorm:"default:0" json:"bookmarks"`
+	LikesCount  int            `gorm:"default:0" json:"likes_count"`
+	BookmarksCount int         `gorm:"default:0" json:"bookmarks_count"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
@@ -28,6 +28,10 @@ type Trip struct {
 	Itineraries []Itinerary    `json:"itineraries"`
 	Budgets     []Budget       `json:"budgets"`
 	Notes       []Note         `json:"notes"`
+	
+	// Social tracking
+	LikedBy     []User `gorm:"many2many:trip_likes;" json:"-"`
+	BookmarkedBy []User `gorm:"many2many:trip_bookmarks;" json:"-"`
 }
 
 type Itinerary struct {

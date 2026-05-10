@@ -7,7 +7,6 @@ import (
 	"github.com/dashboardtemplate/server/models"
 	"github.com/dashboardtemplate/server/utils"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
 
 func calculateTripStatus(trip *models.Trip) {
@@ -260,17 +259,73 @@ func GetPublicTrips(c *fiber.Ctx) error {
 }
 
 func LikeTrip(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
 	id := c.Params("id")
-	if err := database.DB.Model(&models.Trip{}).Where("id = ?", id).Update("likes", gorm.Expr("likes + 1")).Error; err != nil {
-		return utils.RespondWithError(c, err, "Failed to like trip", 500)
+
+	var trip models.Trip
+	if err := database.DB.Preload("LikedBy").Where("id = ?", id).First(&trip).Error; err != nil {
+		return utils.RespondWithError(c, err, "Trip not found", 404)
 	}
-	return c.JSON(fiber.Map{"message": "Trip liked"})
+
+	alreadyLiked := false
+	for _, user := range trip.LikedBy {
+		if user.ID == userID {
+			alreadyLiked = true
+			break
+		}
+	}
+
+	if alreadyLiked {
+		// Unlike
+		database.DB.Model(&trip).Association("LikedBy").Delete(&models.User{ID: userID})
+		trip.LikesCount--
+	} else {
+		// Like
+		database.DB.Model(&trip).Association("LikedBy").Append(&models.User{ID: userID})
+		trip.LikesCount++
+	}
+
+	database.DB.Save(&trip)
+
+	return c.JSON(fiber.Map{
+		"message":     "Action successful",
+		"likes_count": trip.LikesCount,
+		"is_liked":    !alreadyLiked,
+	})
 }
 
 func BookmarkTrip(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
 	id := c.Params("id")
-	if err := database.DB.Model(&models.Trip{}).Where("id = ?", id).Update("bookmarks", gorm.Expr("bookmarks + 1")).Error; err != nil {
-		return utils.RespondWithError(c, err, "Failed to bookmark trip", 500)
+
+	var trip models.Trip
+	if err := database.DB.Preload("BookmarkedBy").Where("id = ?", id).First(&trip).Error; err != nil {
+		return utils.RespondWithError(c, err, "Trip not found", 404)
 	}
-	return c.JSON(fiber.Map{"message": "Trip bookmarked"})
+
+	alreadyBookmarked := false
+	for _, user := range trip.BookmarkedBy {
+		if user.ID == userID {
+			alreadyBookmarked = true
+			break
+		}
+	}
+
+	if alreadyBookmarked {
+		// Unbookmark
+		database.DB.Model(&trip).Association("BookmarkedBy").Delete(&models.User{ID: userID})
+		trip.BookmarksCount--
+	} else {
+		// Bookmark
+		database.DB.Model(&trip).Association("BookmarkedBy").Append(&models.User{ID: userID})
+		trip.BookmarksCount++
+	}
+
+	database.DB.Save(&trip)
+
+	return c.JSON(fiber.Map{
+		"message":         "Action successful",
+		"bookmarks_count": trip.BookmarksCount,
+		"is_bookmarked":   !alreadyBookmarked,
+	})
 }
