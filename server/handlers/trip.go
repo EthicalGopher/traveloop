@@ -91,6 +91,31 @@ func AddItinerary(c *fiber.Ctx) error {
 	return c.Status(201).JSON(itinerary)
 }
 
+func UpdateItinerary(c *fiber.Ctx) error {
+	id := c.Params("itemId")
+	itinerary := new(models.Itinerary)
+
+	if err := c.BodyParser(itinerary); err != nil {
+		return utils.RespondWithError(c, err, "Invalid request body", 400)
+	}
+
+	if err := database.DB.Model(&models.Itinerary{}).Where("id = ?", id).Updates(itinerary).Error; err != nil {
+		return utils.RespondWithError(c, err, "Failed to update itinerary item", 500)
+	}
+
+	return c.JSON(fiber.Map{"message": "Itinerary item updated successfully"})
+}
+
+func DeleteItinerary(c *fiber.Ctx) error {
+	id := c.Params("itemId")
+
+	if err := database.DB.Where("id = ?", id).Delete(&models.Itinerary{}).Error; err != nil {
+		return utils.RespondWithError(c, err, "Failed to delete itinerary item", 500)
+	}
+
+	return c.JSON(fiber.Map{"message": "Itinerary item deleted successfully"})
+}
+
 // Budget Handlers
 
 func AddBudget(c *fiber.Ctx) error {
@@ -109,6 +134,31 @@ func AddBudget(c *fiber.Ctx) error {
 	return c.Status(201).JSON(budget)
 }
 
+func UpdateBudget(c *fiber.Ctx) error {
+	id := c.Params("itemId")
+	budget := new(models.Budget)
+
+	if err := c.BodyParser(budget); err != nil {
+		return utils.RespondWithError(c, err, "Invalid request body", 400)
+	}
+
+	if err := database.DB.Model(&models.Budget{}).Where("id = ?", id).Updates(budget).Error; err != nil {
+		return utils.RespondWithError(c, err, "Failed to update budget item", 500)
+	}
+
+	return c.JSON(fiber.Map{"message": "Budget item updated successfully"})
+}
+
+func DeleteBudget(c *fiber.Ctx) error {
+	id := c.Params("itemId")
+
+	if err := database.DB.Where("id = ?", id).Delete(&models.Budget{}).Error; err != nil {
+		return utils.RespondWithError(c, err, "Failed to delete budget item", 500)
+	}
+
+	return c.JSON(fiber.Map{"message": "Budget item deleted successfully"})
+}
+
 // Note Handlers
 
 func AddNote(c *fiber.Ctx) error {
@@ -125,6 +175,31 @@ func AddNote(c *fiber.Ctx) error {
 	}
 
 	return c.Status(201).JSON(note)
+}
+
+func UpdateNote(c *fiber.Ctx) error {
+	id := c.Params("itemId")
+	note := new(models.Note)
+
+	if err := c.BodyParser(note); err != nil {
+		return utils.RespondWithError(c, err, "Invalid request body", 400)
+	}
+
+	if err := database.DB.Model(&models.Note{}).Where("id = ?", id).Updates(note).Error; err != nil {
+		return utils.RespondWithError(c, err, "Failed to update note", 500)
+	}
+
+	return c.JSON(fiber.Map{"message": "Note updated successfully"})
+}
+
+func DeleteNote(c *fiber.Ctx) error {
+	id := c.Params("itemId")
+
+	if err := database.DB.Where("id = ?", id).Delete(&models.Note{}).Error; err != nil {
+		return utils.RespondWithError(c, err, "Failed to delete note", 500)
+	}
+
+	return c.JSON(fiber.Map{"message": "Note deleted successfully"})
 }
 
 func ToggleShareTrip(c *fiber.Ctx) error {

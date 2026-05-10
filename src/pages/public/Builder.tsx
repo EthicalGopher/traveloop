@@ -3,11 +3,30 @@ import { useLocation } from "react-router-dom";
 import { Calendar, Filter, Loader2, Plus, Trash2 } from "lucide-react";
 import { api } from "../../utils/api";
 import { useAuth } from "../../utils/auth";
-import { featuredDestinations } from "../../data/travelData";
+import { featuredDestinations, type Destination } from "../../data/travelData";
+
+interface ItineraryItem {
+  id: number;
+  day: number;
+  time: string;
+  activity: string;
+  location: string;
+  type: string;
+  notes: string;
+}
+
+interface Trip {
+  id: string | number;
+  title: string;
+  destination: string;
+  start_date: string;
+  end_date: string;
+  itineraries?: ItineraryItem[];
+}
 
 export function Builder() {
   const { isAuthenticated } = useAuth();
-  const [trip, setTrip] = useState<any | null>(null);
+  const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const location = useLocation();
@@ -53,7 +72,7 @@ export function Builder() {
     }
   };
 
-  const addItineraryItem = async (place: any) => {
+  const addItineraryItem = async (place: Destination) => {
     if (!trip) return;
     try {
       const newItem = await api(`/trips/${trip.id}/itinerary`, {
@@ -124,8 +143,8 @@ export function Builder() {
         
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <h3 className="font-label text-xs font-bold text-text-secondary uppercase tracking-widest px-2">Itinerary Timeline</h3>
-          {trip.itineraries?.length > 0 ? (
-            trip.itineraries.map((item: any) => (
+          {trip.itineraries && trip.itineraries.length > 0 ? (
+            trip.itineraries.map((item: ItineraryItem) => (
               <div key={item.id} className="bg-surface-canvas border border-border-subtle rounded-xl p-4 shadow-sm relative group">
                 <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-xl"></div>
                 <div className="flex justify-between items-start pl-2">

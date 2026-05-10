@@ -10,12 +10,27 @@ import CreateTripModal from "./components/CreateTripModal";
 import SelectTripModal from "./components/SelectTripModal";
 import { motion, AnimatePresence } from "framer-motion";
 
+interface ItineraryItem {
+  activity: string;
+  location: string;
+}
+
+interface PublicTrip {
+  id: string | number;
+  title: string;
+  destination: string;
+  image?: string;
+  category?: string;
+  created_at: string;
+  itineraries?: ItineraryItem[];
+}
+
 export function Community() {
   useAuth();
-  const [selectedDest, setSelectedDest] = useState<any | null>(null);
+  const [selectedDest, setSelectedDest] = useState<PublicTrip | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
-  const [publicTrips, setPublicTrips] = useState<any[]>([]);
+  const [publicTrips, setPublicTrips] = useState<PublicTrip[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchPublicTrips = async () => {
@@ -200,7 +215,7 @@ export function Community() {
                        Itinerary Highlights
                     </h3>
                     <div className="space-y-4">
-                      {selectedDest.itineraries?.slice(0, 3).map((item: any, i: number) => (
+                      {selectedDest.itineraries?.slice(0, 3).map((item: ItineraryItem, i: number) => (
                         <div key={i} className="flex gap-4 p-4 rounded-2xl bg-surface-background border border-border-subtle/50">
                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">{i+1}</div>
                            <div>
@@ -219,15 +234,26 @@ export function Community() {
                      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16"></div>
                      <h4 className="font-headline text-base font-black text-primary uppercase mb-2 italic">Ready for this adventure?</h4>
                      <p className="font-body text-sm text-text-secondary mb-6">Create a personalized trip based on this community favorite and start planning today.</p>
-                     <button 
-                        onClick={() => {
-                          setIsCreateModalOpen(true);
-                        }}
-                        className="w-full bg-primary text-on-primary py-4 rounded-xl font-label text-sm font-black uppercase tracking-widest hover:shadow-primary/40 transition-all flex items-center justify-center gap-3 shadow-lg shadow-primary/20 active:scale-[0.98]"
-                     >
-                       <Plus size={20} />
-                       Add to My Trips
-                     </button>
+                     <div className="flex flex-col sm:flex-row gap-3">
+                        <button 
+                            onClick={() => {
+                              setIsCreateModalOpen(true);
+                            }}
+                            className="flex-1 bg-primary text-on-primary py-4 rounded-xl font-label text-sm font-black uppercase tracking-widest hover:shadow-primary/40 transition-all flex items-center justify-center gap-3 shadow-lg shadow-primary/20 active:scale-[0.98]"
+                        >
+                          <Plus size={20} />
+                          Add to My Trips
+                        </button>
+                        <a 
+                            href={selectedDest.mapUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedDest.title)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-6 bg-white text-[#1a73e8] border border-[#1a73e8] py-4 rounded-xl font-label text-sm font-black uppercase tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+                        >
+                          <Map size={20} />
+                          Map
+                        </a>
+                     </div>
                   </section>
                 </div>
               </div>

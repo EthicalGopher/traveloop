@@ -10,9 +10,17 @@ import { featuredDestinations, categories } from "../../data/travelData";
 import { motion } from "framer-motion";
 import CreateTripModal from "./components/CreateTripModal";
 
+interface Trip {
+  id: string | number;
+  title: string;
+  destination: string;
+  image?: string;
+  status: string;
+}
+
 export function Dashboard() {
   const { user } = useAuth();
-  const [trips, setTrips] = useState<any[]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState("");
@@ -173,18 +181,30 @@ export function Dashboard() {
                   <p className="font-body text-sm text-text-secondary line-clamp-2">
                     {dest.description}
                   </p>
-                  <div className="mt-auto flex items-center justify-between pt-4 border-t border-border-subtle/50">
-                    <div>
-                      <span className="text-[10px] text-text-secondary font-bold uppercase tracking-widest">Starting from</span>
-                      <p className="text-xl font-bold text-primary">{dest.price}</p>
+                  <div className="mt-auto flex items-center justify-between pt-4 border-t border-border-subtle/50 gap-2">
+                    <div className="min-w-0">
+                      <span className="text-[10px] text-text-secondary font-bold uppercase tracking-widest block">Starting from</span>
+                      <p className="text-lg font-bold text-primary truncate">{dest.price}</p>
                     </div>
-                    <button 
-                      onClick={() => openCreateModal(dest.title)}
-                      className="bg-primary/10 text-primary hover:bg-primary hover:text-on-primary p-2 md:px-4 md:py-2 rounded-lg font-label text-xs font-bold transition-all flex items-center gap-2"
-                    >
-                      <Plus size={16} />
-                      <span className="hidden sm:inline">Add Trip</span>
-                    </button>
+                    <div className="flex gap-2 shrink-0">
+                      <a 
+                        href={dest.mapUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest.title)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-2 bg-[#1a73e8]/10 text-[#1a73e8] rounded-lg hover:bg-[#1a73e8] hover:text-white transition-all flex items-center justify-center"
+                        title="View on Google Maps"
+                      >
+                         <Map size={16} />
+                      </a>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); openCreateModal(dest.title); }}
+                        className="bg-primary/10 text-primary hover:bg-primary hover:text-on-primary px-3 py-2 rounded-lg font-label text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 shadow-sm"
+                      >
+                        <Plus size={14} />
+                        <span>Add</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </motion.div>

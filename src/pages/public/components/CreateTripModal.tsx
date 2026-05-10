@@ -60,8 +60,8 @@ export function CreateTripModal({ isOpen, onClose, initialPlace }: CreateTripMod
 
       onClose();
       navigate(`/dashboard/builder?id=${trip.id}`);
-    } catch (err: any) {
-      setError(err.message || "Failed to create trip");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to create trip");
     } finally {
       setLoading(false);
     }

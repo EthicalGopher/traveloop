@@ -1,21 +1,60 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   Map, Wallet, Plus, Share2, PlusCircle, MapPin,
   Plane, Home, PlaneTakeoff, Clock, CheckCircle2,
-  Calendar, FileText, Loader2, Trash2, Edit2, Info, Globe, GlobeLock
+  Calendar, FileText, Loader2, Trash2, Edit2, Info, Globe, GlobeLock, X
 } from "lucide-react";
 import { api } from "../../utils/api";
 import { useAuth } from "../../utils/auth";
+import { motion } from "framer-motion";
+
+interface ItineraryItem {
+  id: number;
+  day: number;
+  time: string;
+  activity: string;
+  location: string;
+  type: string;
+  notes: string;
+}
+
+interface BudgetEntry {
+  id: number;
+  category: string;
+  amount: number;
+}
+
+interface Note {
+  id: number;
+  title: string;
+  content: string;
+}
+
+interface Trip {
+  id: number;
+  title: string;
+  destination: string;
+  start_date: string;
+  end_date: string;
+  image?: string;
+  category?: string;
+  is_public: boolean;
+  itineraries?: ItineraryItem[];
+  budgets?: BudgetEntry[];
+  notes?: Note[];
+}
 
 export function Itinerary() {
   const { isAuthenticated } = useAuth();
-  const [trips, setTrips] = useState<any[]>([]);
-  const [selectedTrip, setSelectedTrip] = useState<any | null>(null);
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('itinerary');
   const [isAddingItinerary, setIsAddingItinerary] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [editingItem, setEditingItem] = useState<ItineraryItem | null>(null);
+  const [isEditingTrip, setIsEditingTrip] = useState(false);
 
   const [itineraryForm, setItineraryForm] = useState({
     day: 1,
@@ -25,6 +64,35 @@ export function Itinerary() {
     type: "activity",
     notes: ""
   });
+
+  const [tripForm, setTripForm] = useState({
+    title: "",
+    destination: "",
+    start_date: "",
+    end_date: "",
+    image: "",
+    category: ""
+  });
+
+  const fetchTripDetails = useCallback(async (id: number) => {
+    setDetailsLoading(true);
+    try {
+      const data = await api(`/trips/${id}`);
+      setSelectedTrip(data);
+      setTripForm({
+        title: data.title,
+        destination: data.destination,
+        start_date: data.start_date ? data.start_date.split('T')[0] : "",
+        end_date: data.end_date ? data.end_date.split('T')[0] : "",
+        image: data.image,
+        category: data.category
+      });
+    } catch (err) {
+      console.error("Failed to fetch trip details:", err);
+    } finally {
+      setDetailsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchTrips = async () => {
@@ -41,38 +109,68 @@ export function Itinerary() {
       }
     };
     if (isAuthenticated) fetchTrips();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, selectedTrip, fetchTripDetails]);
 
-  const fetchTripDetails = async (id: number) => {
-    setDetailsLoading(true);
-    try {
-      const data = await api(`/trips/${id}`);
-      setSelectedTrip(data);
-    } catch (err) {
-      console.error("Failed to fetch trip details:", err);
-    } finally {
-      setDetailsLoading(false);
-    }
-  };
-
-  const handleAddItinerary = async (e: React.FormEvent) => {
+  const handleSaveItinerary = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTrip || !itineraryForm.activity) return;
 
     try {
-      await api(`/trips/${selectedTrip.id}/itinerary`, {
-        method: "POST",
-        body: JSON.stringify({
-          ...itineraryForm,
-          day: Number(itineraryForm.day)
-        })
-      });
+      if (editingItem) {
+        await api(`/trips/itinerary/${editingItem.id}`, {
+          method: "PUT",
+          body: JSON.stringify({
+            ...itineraryForm,
+            day: Number(itineraryForm.day)
+          })
+        });
+      } else {
+        await api(`/trips/${selectedTrip.id}/itinerary`, {
+          method: "POST",
+          body: JSON.stringify({
+            ...itineraryForm,
+            day: Number(itineraryForm.day)
+          })
+        });
+      }
       setIsAddingItinerary(false);
+      setEditingItem(null);
       setItineraryForm({ day: 1, time: "09:00 AM", activity: "", location: "", type: "activity", notes: "" });
       fetchTripDetails(selectedTrip.id);
     } catch (err) {
-      console.error("Failed to add itinerary:", err);
-      alert("Failed to add itinerary item");
+      console.error("Failed to save itinerary:", err);
+      alert("Failed to save itinerary item");
+    }
+  };
+
+  const handleDeleteItinerary = async (itemId: number) => {
+    if (!confirm("Delete this activity?")) return;
+    try {
+      await api(`/trips/itinerary/${itemId}`, { method: "DELETE" });
+      if (selectedTrip) {
+        fetchTripDetails(selectedTrip.id);
+      }
+    } catch {
+      alert("Failed to delete item");
+    }
+  };
+
+  const handleUpdateTrip = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTrip) return;
+
+    try {
+      await api(`/trips/${selectedTrip.id}`, {
+        method: "PUT",
+        body: JSON.stringify(tripForm)
+      });
+      setIsEditingTrip(false);
+      fetchTripDetails(selectedTrip.id);
+      // Refresh list
+      const data = await api("/trips");
+      setTrips(data);
+    } catch {
+      alert("Failed to update trip");
     }
   };
 
@@ -83,7 +181,7 @@ export function Itinerary() {
       await api(`/trips/${id}`, { method: "DELETE" });
       setTrips(prev => prev.filter(t => t.id !== id));
       if (selectedTrip?.id === id) setSelectedTrip(null);
-    } catch (err) {
+    } catch {
       alert("Failed to delete trip");
     }
   };
@@ -94,23 +192,35 @@ export function Itinerary() {
     try {
       const res = await api(`/trips/${selectedTrip.id}/share`, { method: "PUT" });
       setSelectedTrip({ ...selectedTrip, is_public: res.is_public });
-      // Update the trip in the list as well
       setTrips(prev => prev.map(t => t.id === selectedTrip.id ? { ...t, is_public: res.is_public } : t));
-    } catch (err) {
+    } catch {
       alert("Failed to update share status");
     } finally {
       setIsSharing(false);
     }
   };
 
+  const startEditing = (item: ItineraryItem) => {
+    setEditingItem(item);
+    setItineraryForm({
+      day: item.day,
+      time: item.time,
+      activity: item.activity,
+      location: item.location,
+      type: item.type,
+      notes: item.notes
+    });
+    setIsAddingItinerary(true);
+  };
+
   if (!isAuthenticated) return null;
 
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-surface-background">
-      <div className="max-w-[1440px] mx-auto p-4 md:p-6 lg:p-8 flex flex-col lg:flex-row gap-8 w-full h-full">
+      <div className="max-w-[1440px] mx-auto p-4 md:p-6 lg:p-8 flex flex-col lg:flex-row gap-8 w-full h-full overflow-hidden">
         
         {/* Left Column: Trip List */}
-        <div className="w-full lg:w-80 flex flex-col gap-6 shrink-0 h-full overflow-y-auto custom-scrollbar pr-2">
+        <div className="w-full lg:w-80 flex flex-col gap-6 shrink-0 h-full overflow-y-auto custom-scrollbar pr-2 pb-20 md:pb-0">
           <div className="flex items-center justify-between">
             <h1 className="font-headline text-2xl font-bold text-text-primary">My Trips</h1>
             <button 
@@ -218,7 +328,10 @@ export function Itinerary() {
                            {selectedTrip.is_public ? "Shared" : "Share"}
                          </span>
                        </button>
-                       <button className="bg-white/20 backdrop-blur-md text-white p-3 rounded-xl hover:bg-white/30 transition-all border border-white/20">
+                       <button 
+                         onClick={() => setIsEditingTrip(true)}
+                         className="bg-white/20 backdrop-blur-md text-white p-3 rounded-xl hover:bg-white/30 transition-all border border-white/20"
+                       >
                          <Edit2 size={18} />
                        </button>
                        <button className="bg-white/20 backdrop-blur-md text-white p-3 rounded-xl hover:bg-white/30 transition-all border border-white/20">
@@ -253,13 +366,17 @@ export function Itinerary() {
               </div>
 
               {/* Tab Content */}
-              <div className="flex-1 min-h-0">
+              <div className="flex-1 min-h-0 pb-20">
                 {activeTab === 'itinerary' && (
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
                        <h3 className="font-headline text-xl font-bold text-text-primary italic">Timeline</h3>
                        <button 
-                         onClick={() => setIsAddingItinerary(true)}
+                         onClick={() => {
+                            setEditingItem(null);
+                            setItineraryForm({ day: 1, time: "09:00 AM", activity: "", location: "", type: "activity", notes: "" });
+                            setIsAddingItinerary(true);
+                         }}
                          className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest shadow-md hover:opacity-90"
                        >
                          <Plus size={14} /> Add Item
@@ -267,7 +384,8 @@ export function Itinerary() {
                     </div>
 
                     {isAddingItinerary && (
-                      <form onSubmit={handleAddItinerary} className="bg-surface-canvas border border-primary/20 rounded-2xl p-6 shadow-sm animate-in zoom-in-95 duration-200 space-y-4">
+                      <form onSubmit={handleSaveItinerary} className="bg-surface-canvas border border-primary/20 rounded-2xl p-6 shadow-sm animate-in zoom-in-95 duration-200 space-y-4">
+                         <h4 className="font-headline text-sm font-bold text-primary uppercase">{editingItem ? "Edit Activity" : "Add New Activity"}</h4>
                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="flex flex-col gap-1.5">
                                <label className="text-[10px] font-black uppercase text-primary tracking-widest">Day & Time</label>
@@ -298,15 +416,17 @@ export function Itinerary() {
                             </div>
                          </div>
                          <div className="flex justify-end gap-3 pt-2">
-                            <button type="button" onClick={() => setIsAddingItinerary(false)} className="px-5 py-2 text-xs font-bold text-text-secondary hover:bg-surface-background rounded-lg transition-all">Cancel</button>
-                            <button type="submit" className="bg-primary text-on-primary px-8 py-2 rounded-lg text-xs font-black uppercase tracking-widest shadow-md">Save Activity</button>
+                            <button type="button" onClick={() => {setIsAddingItinerary(false); setEditingItem(null);}} className="px-5 py-2 text-xs font-bold text-text-secondary hover:bg-surface-background rounded-lg transition-all">Cancel</button>
+                            <button type="submit" className="bg-primary text-on-primary px-8 py-2 rounded-lg text-xs font-black uppercase tracking-widest shadow-md">
+                               {editingItem ? "Update Activity" : "Save Activity"}
+                            </button>
                          </div>
                       </form>
                     )}
 
                     <div className="space-y-6">
                       {selectedTrip.itineraries && selectedTrip.itineraries.length > 0 ? (
-                        selectedTrip.itineraries.map((item: any) => (
+                        selectedTrip.itineraries.map((item: ItineraryItem) => (
                           <div key={item.id} className="flex gap-6 relative group">
                             <div className="absolute left-[21px] top-8 bottom-0 w-0.5 bg-border-subtle/30 group-last:hidden"></div>
                             
@@ -319,9 +439,17 @@ export function Itinerary() {
                             </div>
                             
                             <div className="flex-1 pb-10">
-                              <div className="bg-surface-canvas p-5 rounded-2xl border border-border-subtle shadow-xs group-hover:shadow-md transition-all group-hover:border-primary/30">
+                              <div className="bg-surface-canvas p-5 rounded-2xl border border-border-subtle shadow-xs group-hover:shadow-md transition-all group-hover:border-primary/30 relative">
+                                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                   <button onClick={() => startEditing(item)} className="p-1.5 bg-surface-background hover:bg-primary/10 text-text-secondary hover:text-primary rounded-lg transition-colors border border-border-subtle">
+                                      <Edit2 size={12} />
+                                   </button>
+                                   <button onClick={() => handleDeleteItinerary(item.id)} className="p-1.5 bg-surface-background hover:bg-red-50 text-text-secondary hover:text-red-500 rounded-lg transition-colors border border-border-subtle">
+                                      <Trash2 size={12} />
+                                   </button>
+                                </div>
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                                  <h4 className="font-headline text-lg font-bold text-text-primary">{item.activity}</h4>
+                                  <h4 className="font-headline text-lg font-bold text-text-primary pr-20">{item.activity}</h4>
                                   <div className="flex items-center gap-2">
                                      <span className="font-label text-[10px] font-black uppercase text-primary bg-primary/5 px-3 py-1 rounded-full border border-primary/10">
                                        Day {item.day}
@@ -334,6 +462,17 @@ export function Itinerary() {
                                 <div className="flex items-center gap-2 text-text-secondary">
                                   <MapPin size={14} className="text-primary/60" />
                                   <span className="font-label text-xs font-bold uppercase tracking-wide">{item.location}</span>
+                                  {item.location && (
+                                    <a 
+                                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="ml-2 p-1 hover:bg-primary/10 rounded-md text-primary/40 hover:text-primary transition-all"
+                                      title="Open in Maps"
+                                    >
+                                      <Map size={12} />
+                                    </a>
+                                  )}
                                 </div>
                                 {item.notes && (
                                   <p className="mt-4 p-4 bg-surface-background/50 rounded-xl border border-border-subtle/50 font-body text-xs text-text-secondary italic leading-relaxed border-l-4 border-l-primary/30">
@@ -374,7 +513,7 @@ export function Itinerary() {
                          <div>
                             <span className="font-label text-[10px] font-black text-text-secondary uppercase tracking-widest mb-1 block">Total Budget</span>
                             <h3 className="font-display text-4xl font-bold text-text-primary mt-2">
-                              ${selectedTrip.budgets?.reduce((s:number, b:any) => s + b.amount, 0).toFixed(2)}
+                              ${selectedTrip.budgets?.reduce((s:number, b:BudgetEntry) => s + b.amount, 0).toFixed(2)}
                             </h3>
                          </div>
                          <div className="mt-8">
@@ -389,7 +528,7 @@ export function Itinerary() {
                        </div>
                        
                        <div className="space-y-4">
-                          {selectedTrip.budgets?.slice(0, 3).map((b:any) => (
+                          {selectedTrip.budgets?.slice(0, 3).map((b:BudgetEntry) => (
                              <div key={b.id} className="bg-surface-canvas p-4 rounded-xl border border-border-subtle flex items-center justify-between shadow-xs">
                                 <div className="flex items-center gap-3">
                                    <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary"><Wallet size={16} /></div>
@@ -406,7 +545,7 @@ export function Itinerary() {
                 {activeTab === 'notes' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {selectedTrip.notes && selectedTrip.notes.length > 0 ? (
-                      selectedTrip.notes.map((note: any) => (
+                      selectedTrip.notes.map((note: Note) => (
                         <div key={note.id} className="bg-yellow-50/50 p-6 rounded-3xl border border-yellow-200/50 shadow-xs group hover:shadow-md transition-all relative">
                           <h4 className="font-headline text-base font-bold text-text-primary mb-3 italic">{note.title}</h4>
                           <p className="font-body text-xs text-text-secondary line-clamp-6 leading-relaxed opacity-80">{note.content}</p>
@@ -425,33 +564,35 @@ export function Itinerary() {
                 )}
 
                 {activeTab === 'map' && (
-                  <div className="w-full h-[500px] bg-surface-canvas rounded-[3rem] border border-border-subtle overflow-hidden relative shadow-inner">
-                     <div className="absolute inset-0 bg-[#f0f0f0] flex items-center justify-center">
-                        <div className="flex flex-col items-center gap-4 text-text-secondary opacity-40">
-                           <Map size={64} strokeWidth={1} />
-                           <p className="font-headline text-xl font-bold uppercase tracking-tighter italic">Interactive Map View</p>
-                        </div>
-                     </div>
-                     {/* Floating Map Marker UI */}
-                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                        <div className="relative group cursor-pointer">
-                           <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping"></div>
-                           <div className="relative bg-primary text-on-primary p-3 rounded-full shadow-xl border-4 border-white">
-                              <MapPin size={24} />
+                  <div className="w-full h-[500px] bg-surface-canvas rounded-[3rem] border border-border-subtle overflow-hidden relative shadow-inner group">
+                     <div className="absolute inset-0 bg-[#f0f0f0] flex flex-col items-center justify-center p-8 text-center transition-all group-hover:bg-[#e8e8e8]">
+                        <div className="flex flex-col items-center gap-6 max-w-sm">
+                           <div className="p-6 bg-white rounded-full shadow-xl animate-bounce">
+                              <MapPin size={48} className="text-primary" />
                            </div>
-                           <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 bg-white px-4 py-2 rounded-xl shadow-2xl border border-border-subtle whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100">
-                              <p className="font-headline text-xs font-bold text-text-primary">{selectedTrip.destination}</p>
-                              <p className="font-body text-[10px] text-text-secondary">Current Stop</p>
+                           <div>
+                              <h4 className="font-headline text-2xl font-black text-text-primary uppercase italic tracking-tighter mb-2">Explore {selectedTrip.destination}</h4>
+                              <p className="font-body text-sm text-text-secondary leading-relaxed mb-8">Get precise directions and discover nearby attractions using our integrated mapping service.</p>
+                              
+                              <a 
+                                href={selectedTrip.map_url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedTrip.destination)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-3 bg-[#1a73e8] text-white px-8 py-4 rounded-2xl font-label text-sm font-black uppercase tracking-widest shadow-lg hover:bg-[#1557b0] transition-all active:scale-[0.98]"
+                              >
+                                 <Map size={20} />
+                                 Open Google Maps
+                              </a>
                            </div>
                         </div>
                      </div>
 
-                     <div className="absolute bottom-8 left-8 right-8 bg-white/80 backdrop-blur-md p-6 rounded-3xl border border-white/40 shadow-2xl">
+                     <div className="absolute bottom-8 left-8 right-8 bg-white/80 backdrop-blur-md p-6 rounded-3xl border border-white/40 shadow-2xl transition-all translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100">
                         <div className="flex items-center gap-4">
                            <div className="p-3 bg-primary rounded-2xl text-white shadow-lg"><Info size={24} /></div>
                            <div>
-                              <h4 className="font-headline text-base font-black text-text-primary uppercase italic">Mapping Service Active</h4>
-                              <p className="font-body text-xs text-text-secondary">Visualizing your itinerary through {selectedTrip.destination}. Interactive routing coming soon.</p>
+                              <h4 className="font-headline text-base font-black text-text-primary uppercase italic">Navigation Active</h4>
+                              <p className="font-body text-xs text-text-secondary">Click the button above to launch Google Maps and start your journey through {selectedTrip.destination}.</p>
                            </div>
                         </div>
                      </div>
@@ -470,6 +611,50 @@ export function Itinerary() {
           )}
         </div>
       </div>
+
+      {/* Edit Trip Modal */}
+      {isEditingTrip && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-surface-canvas w-full max-w-xl rounded-[2.5rem] overflow-hidden shadow-2xl border border-border-subtle flex flex-col"
+          >
+            <div className="flex items-center justify-between px-8 py-6 border-b border-border-subtle">
+               <h2 className="font-display text-2xl font-black text-on-surface uppercase italic">Edit Trip Details</h2>
+               <button onClick={() => setIsEditingTrip(false)} className="w-10 h-10 flex items-center justify-center hover:bg-surface-container rounded-full transition-colors">
+                  <X size={24} className="text-text-secondary" />
+               </button>
+            </div>
+            <form onSubmit={handleUpdateTrip} className="p-8 space-y-6">
+               <div className="space-y-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-black uppercase text-primary tracking-widest">Trip Title</label>
+                    <input required type="text" value={tripForm.title} onChange={e => setTripForm({...tripForm, title: e.target.value})} className="w-full bg-surface-background border border-border-subtle rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-black uppercase text-primary tracking-widest">Destination</label>
+                    <input required type="text" value={tripForm.destination} onChange={e => setTripForm({...tripForm, destination: e.target.value})} className="w-full bg-surface-background border border-border-subtle rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-black uppercase text-primary tracking-widest">Start Date</label>
+                      <input type="date" value={tripForm.start_date} onChange={e => setTripForm({...tripForm, start_date: e.target.value})} className="w-full bg-surface-background border border-border-subtle rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-black uppercase text-primary tracking-widest">End Date</label>
+                      <input type="date" value={tripForm.end_date} onChange={e => setTripForm({...tripForm, end_date: e.target.value})} className="w-full bg-surface-background border border-border-subtle rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" />
+                    </div>
+                  </div>
+               </div>
+               <div className="flex justify-end gap-3 pt-4">
+                  <button type="button" onClick={() => setIsEditingTrip(false)} className="px-8 py-3 text-sm font-bold text-text-secondary hover:bg-surface-background rounded-xl transition-all uppercase tracking-widest">Cancel</button>
+                  <button type="submit" className="bg-primary text-on-primary px-10 py-3 rounded-xl text-sm font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all">Update Trip</button>
+               </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,15 +1,32 @@
-import { useState, useEffect } from "react";
-import { Landmark, Utensils, AlertTriangle, PlusCircle, Loader2, DollarSign, Wallet, Plane, Car, X } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Landmark, Utensils, AlertTriangle, PlusCircle, Loader2, DollarSign, Wallet, Plane, Car, X, Trash2, Edit2 } from "lucide-react";
 import { api } from "../../utils/api";
 import { useAuth } from "../../utils/auth";
+import { motion } from "framer-motion";
+
+interface BudgetEntry {
+  id: number;
+  category: string;
+  amount: number;
+  currency: string;
+  created_at: string;
+}
+
+interface Trip {
+  id: string | number;
+  title: string;
+  destination: string;
+  budgets?: BudgetEntry[];
+}
 
 export function Budget() {
   const { isAuthenticated } = useAuth();
-  const [trips, setTrips] = useState<any[]>([]);
-  const [selectedTrip, setSelectedTrip] = useState<any | null>(null);
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [isAddingExpense, setIsAddingExpense] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<BudgetEntry | null>(null);
   
   const [expenseForm, setExpenseForm] = useState({
     category: "Food",
@@ -17,25 +34,7 @@ export function Budget() {
     currency: "USD"
   });
 
-  useEffect(() => {
-    const fetchTrips = async () => {
-      if (!isAuthenticated) return;
-      try {
-        const data = await api("/trips");
-        setTrips(data);
-        if (data.length > 0) {
-          fetchTripDetails(data[0].id);
-        }
-      } catch (err) {
-        console.error("Failed to fetch trips:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTrips();
-  }, [isAuthenticated]);
-
-  const fetchTripDetails = async (id: string | number) => {
+  const fetchTripDetails = useCallback(async (id: string | number) => {
     setDetailsLoading(true);
     try {
       const data = await api(`/trips/${id}`);
@@ -45,33 +44,85 @@ export function Budget() {
     } finally {
       setDetailsLoading(false);
     }
-  };
+  }, []);
 
-  const handleAddExpense = async (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchTrips = async () => {
+      if (!isAuthenticated) return;
+      try {
+        const data = await api("/trips");
+        setTrips(data);
+        if (data.length > 0 && !selectedTrip) {
+          fetchTripDetails(data[0].id);
+        }
+      } catch (err) {
+        console.error("Failed to fetch trips:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTrips();
+  }, [isAuthenticated, selectedTrip, fetchTripDetails]);
+
+  const handleSaveExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTrip || !expenseForm.amount) return;
 
     try {
-      await api(`/trips/${selectedTrip.id}/budget`, {
-        method: "POST",
-        body: JSON.stringify({
-          category: expenseForm.category,
-          amount: parseFloat(expenseForm.amount),
-          currency: expenseForm.currency
-        })
-      });
+      if (editingExpense) {
+        await api(`/trips/budget/${editingExpense.id}`, {
+          method: "PUT",
+          body: JSON.stringify({
+            category: expenseForm.category,
+            amount: parseFloat(expenseForm.amount),
+            currency: expenseForm.currency
+          })
+        });
+      } else {
+        await api(`/trips/${selectedTrip.id}/budget`, {
+          method: "POST",
+          body: JSON.stringify({
+            category: expenseForm.category,
+            amount: parseFloat(expenseForm.amount),
+            currency: expenseForm.currency
+          })
+        });
+      }
       setIsAddingExpense(false);
+      setEditingExpense(null);
       setExpenseForm({ category: "Food", amount: "", currency: "USD" });
       fetchTripDetails(selectedTrip.id);
     } catch (err) {
-      console.error("Failed to add expense:", err);
-      alert("Failed to add expense");
+      console.error("Failed to save expense:", err);
+      alert("Failed to save expense");
     }
+  };
+
+  const handleDeleteExpense = async (id: number) => {
+    if (!confirm("Delete this expense?")) return;
+    try {
+      await api(`/trips/budget/${id}`, { method: "DELETE" });
+      if (selectedTrip) {
+        fetchTripDetails(selectedTrip.id);
+      }
+    } catch {
+      alert("Failed to delete expense");
+    }
+  };
+
+  const startEditingExpense = (expense: BudgetEntry) => {
+    setEditingExpense(expense);
+    setExpenseForm({
+      category: expense.category,
+      amount: expense.amount.toString(),
+      currency: expense.currency
+    });
+    setIsAddingExpense(true);
   };
 
   const calculateTotal = () => {
     if (!selectedTrip?.budgets) return 0;
-    return selectedTrip.budgets.reduce((sum: number, b: any) => sum + b.amount, 0);
+    return selectedTrip.budgets.reduce((sum: number, b: BudgetEntry) => sum + b.amount, 0);
   };
 
   const getCategoryIcon = (category: string) => {
@@ -119,17 +170,17 @@ export function Budget() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-surface-background relative md:w-full h-full">
+    <div className="flex-1 flex flex-col min-w-0 bg-surface-background relative md:w-full h-full overflow-hidden">
       <header className="bg-surface-canvas border-b border-border-subtle p-4 md:p-6 shrink-0">
         <div className="max-w-[1280px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-bold text-text-primary">Budget Planner</h1>
-            <p className="text-sm text-text-secondary">Track and manage your travel expenses</p>
+            <h1 className="text-2xl font-bold text-text-primary italic uppercase tracking-tighter">Budget Planner</h1>
+            <p className="text-sm text-text-secondary">Manage your adventure expenses</p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-text-secondary">Select Trip:</span>
+            <span className="text-[10px] font-black uppercase text-text-secondary tracking-widest">Select Trip:</span>
             <select 
-              className="bg-surface-container-low border border-border-subtle rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              className="bg-surface-container-low border border-border-subtle rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary"
               value={selectedTrip?.id || ""}
               onChange={(e) => fetchTripDetails(e.target.value)}
             >
@@ -141,20 +192,20 @@ export function Budget() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+      <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 custom-scrollbar pb-32">
         {detailsLoading ? (
           <div className="h-full flex items-center justify-center">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : selectedTrip ? (
-          <div className="max-w-[1280px] mx-auto w-full grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-8">
+          <div className="max-w-[1280px] mx-auto w-full grid grid-cols-1 xl:grid-cols-12 gap-10">
             {/* Left panel: Expenses List */}
-            <div className="xl:col-span-7 flex flex-col gap-6">
+            <div className="xl:col-span-7 flex flex-col gap-8">
               <div className="flex items-center justify-between">
-                <h2 className="font-headline text-xl font-bold text-text-primary">Expenses for {selectedTrip.title}</h2>
+                <h2 className="font-headline text-xl font-bold text-text-primary italic">Expenses for {selectedTrip.title}</h2>
                 <button 
-                  onClick={() => setIsAddingExpense(true)}
-                  className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:opacity-90 transition-opacity"
+                  onClick={() => { setEditingExpense(null); setExpenseForm({category:"Food", amount:"", currency:"USD"}); setIsAddingExpense(true); }}
+                  className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-[0.98]"
                 >
                   <PlusCircle className="w-4 h-4" />
                   Add Expense
@@ -162,14 +213,18 @@ export function Budget() {
               </div>
 
               {isAddingExpense && (
-                <form onSubmit={handleAddExpense} className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-end animate-in slide-in-from-top-2 duration-200">
-                   <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-black uppercase text-primary tracking-widest">Category</label>
+                <form onSubmit={handleSaveExpense} className="bg-surface-canvas border border-primary/20 rounded-[2rem] p-6 flex flex-col gap-6 items-end animate-in zoom-in-95 duration-200 shadow-sm">
+                   <div className="flex items-center justify-between w-full">
+                      <h3 className="font-headline text-sm font-bold text-primary uppercase">{editingExpense ? "Edit Expense" : "New Expense"}</h3>
+                      <button type="button" onClick={() => {setIsAddingExpense(false); setEditingExpense(null);}} className="text-text-secondary hover:text-red-500"><X size={18} /></button>
+                   </div>
+                   <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-black uppercase text-text-secondary tracking-widest">Category</label>
                         <select 
                           value={expenseForm.category}
                           onChange={(e) => setExpenseForm({...expenseForm, category: e.target.value})}
-                          className="bg-white border border-primary/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                          className="bg-surface-background border border-border-subtle rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary w-full"
                         >
                           <option>Food</option>
                           <option>Transport</option>
@@ -178,93 +233,98 @@ export function Budget() {
                           <option>Misc</option>
                         </select>
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-black uppercase text-primary tracking-widest">Amount ($)</label>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-black uppercase text-text-secondary tracking-widest">Amount ($)</label>
                         <input 
                           type="number" 
                           step="0.01"
                           required
                           value={expenseForm.amount}
                           onChange={(e) => setExpenseForm({...expenseForm, amount: e.target.value})}
-                          className="bg-white border border-primary/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                          className="bg-surface-background border border-border-subtle rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary w-full"
                           placeholder="0.00"
                         />
                       </div>
                    </div>
-                   <div className="flex gap-2 w-full sm:w-auto">
-                      <button 
-                        type="button" 
-                        onClick={() => setIsAddingExpense(false)}
-                        className="p-2.5 rounded-lg border border-primary/20 text-primary hover:bg-white transition-colors"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                      <button 
-                        type="submit"
-                        className="flex-1 sm:flex-none bg-primary text-on-primary px-6 py-2.5 rounded-lg text-sm font-bold shadow-md hover:opacity-90"
-                      >
-                        Save
-                      </button>
-                   </div>
+                   <button 
+                      type="submit"
+                      className="w-full sm:w-auto bg-primary text-on-primary px-10 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all"
+                    >
+                      {editingExpense ? "Update Expense" : "Save Expense"}
+                    </button>
                 </form>
               )}
               
               <div className="space-y-4">
-                {selectedTrip.budgets?.length > 0 ? (
-                  selectedTrip.budgets.map((item: any) => (
-                    <div key={item.id} className="bg-surface-canvas border border-border-subtle rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-xl ${getCategoryColor(item.category)}/10 flex items-center justify-center text-primary`}>
+                {selectedTrip.budgets && selectedTrip.budgets.length > 0 ? (
+                  selectedTrip.budgets.map((item: BudgetEntry) => (
+                    <motion.div 
+                      key={item.id} 
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="bg-surface-canvas border border-border-subtle rounded-2xl p-5 shadow-sm hover:shadow-xl transition-all flex items-center gap-4 group relative overflow-hidden"
+                    >
+                      <div className={`w-14 h-14 rounded-2xl ${getCategoryColor(item.category)}/10 flex items-center justify-center text-primary shrink-0`}>
                         {getCategoryIcon(item.category)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-title text-base font-bold text-text-primary truncate capitalize">{item.category}</h3>
-                        <p className="text-xs text-text-secondary">{new Date(item.created_at).toLocaleDateString()}</p>
+                        <h3 className="font-headline text-base font-bold text-text-primary truncate capitalize">{item.category}</h3>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">{new Date(item.created_at).toLocaleDateString()}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold text-lg text-text-primary">${item.amount.toFixed(2)}</p>
-                        <p className="text-[10px] uppercase tracking-widest text-text-secondary">{item.currency}</p>
+                      <div className="text-right mr-10">
+                        <p className="font-display text-xl font-bold text-text-primary">${item.amount.toFixed(2)}</p>
+                        <p className="text-[10px] uppercase tracking-widest text-text-secondary font-black">{item.currency}</p>
                       </div>
-                    </div>
+                      <div className="absolute top-1/2 right-4 -translate-y-1/2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                         <button onClick={() => startEditingExpense(item)} className="p-1.5 hover:bg-primary/10 text-text-secondary hover:text-primary rounded-lg transition-colors border border-border-subtle">
+                            <Edit2 size={12} />
+                         </button>
+                         <button onClick={() => handleDeleteExpense(item.id)} className="p-1.5 hover:bg-red-50 text-text-secondary hover:text-red-500 rounded-lg transition-colors border border-border-subtle">
+                            <Trash2 size={12} />
+                         </button>
+                      </div>
+                    </motion.div>
                   ))
                 ) : (
-                  <div className="text-center py-12 bg-surface-canvas rounded-xl border border-dashed border-border-subtle">
-                    <DollarSign className="w-12 h-12 text-text-secondary mx-auto mb-4 opacity-20" />
-                    <p className="text-text-secondary italic">No expenses added yet.</p>
+                  <div className="text-center py-20 bg-surface-canvas rounded-[3rem] border-2 border-dashed border-border-subtle opacity-60">
+                    <DollarSign className="w-16 h-16 text-text-secondary mx-auto mb-4 opacity-10" />
+                    <p className="text-text-secondary font-headline text-sm font-bold uppercase tracking-widest italic">No expenses recorded.</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Right Panel: Summary */}
-            <div className="xl:col-span-5 flex flex-col gap-6">
-              <div className="bg-surface-canvas border border-border-subtle rounded-3xl p-8 shadow-sm">
-                <h2 className="font-headline text-xl font-bold text-text-primary mb-6 italic uppercase tracking-tighter">Budget Summary</h2>
+            <div className="xl:col-span-5 flex flex-col gap-10">
+              <div className="bg-surface-canvas border border-border-subtle rounded-[3rem] p-10 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -mr-20 -mt-20"></div>
+                <h2 className="font-headline text-xl font-bold text-text-primary mb-10 italic uppercase tracking-tighter">Budget Summary</h2>
                 
-                <div className="mb-8">
-                  <p className="font-label text-[10px] font-black text-text-secondary uppercase tracking-widest">Total Expenses</p>
-                  <h3 className="font-display text-5xl font-bold text-primary mt-2">
+                <div className="mb-12">
+                  <p className="font-label text-[10px] font-black text-text-secondary uppercase tracking-[0.2em] mb-2">Total Accumulated Expenses</p>
+                  <h3 className="font-display text-6xl font-bold text-primary mt-2">
                     ${calculateTotal().toFixed(2)}
                   </h3>
                 </div>
 
-                <div className="space-y-6">
-                  <h4 className="font-headline text-sm font-bold text-text-primary uppercase tracking-wider">Breakdown</h4>
-                  {selectedTrip.budgets?.length > 0 ? (
-                    <div className="space-y-4">
+                <div className="space-y-8">
+                  <h4 className="font-headline text-sm font-bold text-text-primary uppercase tracking-widest border-b border-border-subtle pb-4">Spending Breakdown</h4>
+                  {selectedTrip.budgets && selectedTrip.budgets.length > 0 ? (
+                    <div className="space-y-6">
                       {Object.entries(
-                        selectedTrip.budgets.reduce((acc: any, b: any) => {
+                        selectedTrip.budgets.reduce((acc: Record<string, number>, b: BudgetEntry) => {
                           acc[b.category] = (acc[b.category] || 0) + b.amount;
                           return acc;
                         }, {})
-                      ).map(([category, amount]: [any, any]) => (
-                        <div key={category} className="space-y-2">
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="font-bold text-text-primary uppercase tracking-wide capitalize">{category}</span>
-                            <span className="text-text-secondary font-display font-medium">${amount.toFixed(2)}</span>
+                      ).map(([category, amount]: [string, number]) => (
+                        <div key={category} className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-[10px] text-text-primary uppercase tracking-widest capitalize">{category}</span>
+                            <span className="text-text-secondary font-display text-sm font-bold">${amount.toFixed(2)}</span>
                           </div>
-                          <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+                          <div className="w-full bg-surface-background h-2.5 rounded-full overflow-hidden shadow-inner">
                             <div 
-                              className={`${getCategoryColor(category)} h-full rounded-full`} 
+                              className={`${getCategoryColor(category)} h-full rounded-full shadow-md transition-all duration-1000`} 
                               style={{ width: `${(amount / calculateTotal()) * 100}%` }}
                             ></div>
                           </div>
@@ -272,26 +332,26 @@ export function Budget() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-text-secondary italic opacity-60">No breakdown available yet</p>
+                    <p className="text-xs text-text-secondary italic opacity-40">Add expenses to visualize spending analytics.</p>
                   )}
                 </div>
               </div>
 
               {/* Tips / Alerts */}
-              <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5 flex gap-4">
-                <AlertTriangle className="w-6 h-6 text-orange-500 shrink-0" />
+              <div className="bg-orange-50 border border-orange-100 rounded-[2.5rem] p-8 flex gap-6 shadow-sm border-l-8 border-l-orange-400">
+                <AlertTriangle className="w-10 h-10 text-orange-400 shrink-0" />
                 <div>
-                  <h4 className="font-bold text-orange-800 text-sm">Budget Tip</h4>
-                  <p className="text-orange-700 text-xs mt-1">
-                    Based on your travel style, consider allocating 20% more for miscellaneous activities in {selectedTrip.destination}.
+                  <h4 className="font-black text-orange-900 text-sm uppercase tracking-widest mb-1 italic">Adventure Tip</h4>
+                  <p className="text-orange-800 text-xs mt-2 leading-relaxed font-body">
+                    Smart travelers typically budget an extra 15% for spontaneous activities in destinations like {selectedTrip.destination}. Keep an eye on those misc expenses!
                   </p>
                 </div>
               </div>
             </div>
           </div>
         ) : (
-          <div className="text-center py-20 bg-surface-canvas rounded-3xl border-2 border-dashed border-border-subtle">
-            <p className="text-text-secondary italic">Select a trip to view budget details.</p>
+          <div className="text-center py-32 bg-surface-canvas rounded-[4rem] border-2 border-dashed border-border-subtle">
+            <p className="text-text-secondary italic font-headline text-lg opacity-40 uppercase tracking-widest animate-pulse">Select an Adventure to Plan Budget</p>
           </div>
         )}
       </main>

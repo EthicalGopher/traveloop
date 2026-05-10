@@ -41,13 +41,13 @@ export function Layout() {
       try {
         const trips = await api("/trips");
         const counts = {
-          ongoing: trips.filter((t: any) => t.status === 'ongoing').length,
-          upcoming: trips.filter((t: any) => t.status === 'upcoming').length,
-          completed: trips.filter((t: any) => t.status === 'completed').length,
+          ongoing: trips.filter((t: { status: string }) => t.status === 'ongoing').length,
+          upcoming: trips.filter((t: { status: string }) => t.status === 'upcoming').length,
+          completed: trips.filter((t: { status: string }) => t.status === 'completed').length,
         };
         setTripCounts(counts);
-      } catch (err) {
-        console.error("Failed to fetch trip counts:", err);
+      } catch {
+        console.error("Failed to fetch trip counts");
       }
     };
     fetchCounts();

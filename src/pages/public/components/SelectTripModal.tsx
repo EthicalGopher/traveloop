@@ -8,10 +8,30 @@ interface SelectTripModalProps {
   onShared?: () => void;
 }
 
+interface Trip {
+  id: number;
+  title: string;
+  destination: string;
+  image: string;
+  is_public: boolean;
+}
+
 export default function SelectTripModal({ isOpen, onClose, onShared }: SelectTripModalProps) {
-  const [trips, setTrips] = useState<any[]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [sharingId, setSharingId] = useState<number | null>(null);
+
+  const fetchTrips = async () => {
+    setLoading(true);
+    try {
+      const data = await api("/trips");
+      setTrips(data);
+    } catch {
+      console.error("Failed to fetch trips");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -19,25 +39,13 @@ export default function SelectTripModal({ isOpen, onClose, onShared }: SelectTri
     }
   }, [isOpen]);
 
-  const fetchTrips = async () => {
-    setLoading(true);
-    try {
-      const data = await api("/trips");
-      setTrips(data);
-    } catch (err) {
-      console.error("Failed to fetch trips:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleToggleShare = async (id: number) => {
     setSharingId(id);
     try {
       await api(`/trips/${id}/share`, { method: "PUT" });
       setTrips(prev => prev.map(t => t.id === id ? { ...t, is_public: !t.is_public } : t));
       if (onShared) onShared();
-    } catch (err) {
+    } catch {
       alert("Failed to update share status");
     } finally {
       setSharingId(null);
