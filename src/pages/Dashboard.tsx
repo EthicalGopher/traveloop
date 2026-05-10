@@ -1,4 +1,3 @@
-import React from "react";
 import { CheckCircle } from "lucide-react";
 import StatCard from "../components/StatCard";
 import IncidentFrequencyChart from "../components/IncidentFrequencyChart";

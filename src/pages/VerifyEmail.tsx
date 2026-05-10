@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { CheckCircle, XCircle, Loader2, Mail } from "lucide-react";
+import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { api } from "../utils/api";
 
 const VerifyEmail = () => {
@@ -9,27 +9,27 @@ const VerifyEmail = () => {
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
 
-  const verify = async () => {
-    const token = searchParams.get("token");
-    if (!token) {
-      setStatus("error");
-      setMessage("Verification token is missing.");
-      return;
-    }
-
-    try {
-      const response = await api(`/auth/verify-email?token=${token}`);
-      setStatus("success");
-      setMessage(response.message);
-    } catch (err: any) {
-      setStatus("error");
-      setMessage(err.message);
-    }
-  };
-
   useEffect(() => {
+    const verify = async () => {
+      const token = searchParams.get("token");
+      if (!token) {
+        setStatus("error");
+        setMessage("Verification token is missing.");
+        return;
+      }
+
+      try {
+        const response = await api(`/auth/verify-email?token=${token}`);
+        setStatus("success");
+        setMessage(response.message);
+      } catch (err: unknown) {
+        setStatus("error");
+        setMessage(err instanceof Error ? err.message : "An error occurred");
+      }
+    };
+
     verify();
-  }, []);
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">

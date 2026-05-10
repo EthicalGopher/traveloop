@@ -23,7 +23,7 @@ export const api = async (endpoint: string, options: RequestInit = {}) => {
   let data;
   try {
     data = text ? JSON.parse(text) : {};
-  } catch (e) {
+  } catch {
     // If not JSON, use the raw text as error or data
     if (!response.ok) {
       throw new Error(text || `Error: ${response.status} ${response.statusText}`);

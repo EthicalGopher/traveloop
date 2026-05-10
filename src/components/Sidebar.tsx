@@ -9,7 +9,6 @@ import {
   CheckCircle,
   ChevronDown,
   UserPlus,
-  Bot,
 } from "lucide-react";
 import { useAuth } from "../utils/auth";
 
@@ -23,35 +22,35 @@ interface SidebarProps {
 const navigationConfig = [
   {
     title: "Home",
-    path: "/home",
+    path: "/admin/home",
     icon: Home,
-    roles: ["user", "manager", "ceo"],
+    roles: ["admin"],
   },
   {
     title: "Workspace",
-    path: "/workspace",
+    path: "/admin/workspace",
     icon: Briefcase,
-    roles: ["user", "manager", "ceo"],
+    roles: ["admin"],
   },
   {
     title: "Applications",
-    path: "/applications",
+    path: "/admin/applications",
     icon: UserPlus,
-    roles: ["ceo"],
+    roles: ["admin"],
   },
   {
     title: "Risk Management",
-    path: "/risk-management",
+    path: "/admin/risk-management",
     icon: Shield,
     hasSubmenu: true,
-    roles: ["manager", "ceo"],
+    roles: ["admin"],
   },
   {
     title: "Compliance",
-    path: "/compliance",
+    path: "/admin/compliance",
     icon: CheckCircle,
     hasSubmenu: true,
-    roles: ["manager", "ceo"],
+    roles: ["admin"],
   },
 ];
 
@@ -123,7 +122,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, activePath }) => {
         } lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 h-screen w-80 lg:w-96 glass-sidebar flex flex-col p-6 space-y-10 border-r border-white/20`}
       >
         <div className="flex items-center justify-between px-2">
-          <Link to="/workspace" className="flex items-center gap-3 group">
+          <Link to="/admin/workspace" className="flex items-center gap-3 group">
             <div className="w-10 h-10 bg-gradient-to-br from-red-500 via-yellow-500 to-blue-500 rounded-xl flex items-center justify-center text-white group-hover:shadow-lg group-hover:shadow-purple-500/30 transition-all duration-300">
               <LayoutGrid size={20} />
             </div>
@@ -157,7 +156,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, activePath }) => {
         </nav>
 
         <div className="pt-6 border-t border-slate-200/50 space-y-4">
-          <Link to="/settings" className="flex items-center gap-3 px-4 py-3 hover:bg-surface-container-lowest/50 rounded-xl transition-all duration-300 cursor-pointer group">
+          <Link to="/admin/settings" className="flex items-center gap-3 px-4 py-3 hover:bg-surface-container-lowest/50 rounded-xl transition-all duration-300 cursor-pointer group">
             <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-300 ring-2 ring-transparent group-hover:ring-primary/30 transition-all">
               <img
                 alt="User profile"

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import AIFloatingChat from "../components/AIFloatingChat";
-import { isAuthenticated } from "../utils/auth";
+import { useAuth } from "../utils/auth";
 
 const DashboardLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -13,23 +13,27 @@ const DashboardLayout = () => {
   // Map route path to header title
   const getTitle = (path: string) => {
     switch (path) {
-      case "/home": return "Home";
-      case "/workspace": return "Workspace";
-      case "/applications": return "Applications";
-      case "/risk-management": return "Risk Management";
-      case "/compliance": return "Compliance";
-      case "/settings": return "Settings";
+      case "/admin/home": return "Home";
+      case "/admin/workspace": return "Workspace";
+      case "/admin/applications": return "Applications";
+      case "/admin/risk-management": return "Risk Management";
+      case "/admin/compliance": return "Compliance";
+      case "/admin/settings": return "Settings";
       default: return "Platform";
     }
   };
 
-  useEffect(() => {
-    if (!isAuthenticated()) {
-      navigate("/login");
-    }
-  }, [navigate]);
+  const { role, isAuthenticated: isAuth } = useAuth();
 
-  if (!isAuthenticated()) {
+  useEffect(() => {
+    if (!isAuth) {
+      navigate("/admin/login");
+    } else if (role !== "admin") {
+      navigate("/");
+    }
+  }, [isAuth, role, navigate]);
+
+  if (!isAuth || role !== "admin") {
     return null;
   }
 

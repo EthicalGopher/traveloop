@@ -14,7 +14,7 @@ type User struct {
 	Email                string         `gorm:"uniqueIndex;not null" json:"email"`
 	Password             string         `gorm:"not null" json:"-"`
 	FullName             string         `json:"full_name"`
-	Role                 string         `gorm:"default:user" json:"role"`
+	Role                 string         `gorm:"default:public" json:"role"`
 	Status               string         `gorm:"default:active" json:"status"` // pending, active, rejected
 	Avatar               string         `json:"avatar"`
 	IsEmailVerified      bool           `gorm:"default:false" json:"is_email_verified"`

@@ -29,8 +29,8 @@ const ResetPassword = () => {
         body: JSON.stringify({ token, password }),
       });
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }

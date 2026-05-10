@@ -3,9 +3,9 @@
 import { motion } from "framer-motion";
 import { GripHorizontal } from "lucide-react";
 import { useTheme } from "next-themes";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
 
 const Skiper26 = () => {
   const [variant, setVariant] = useState<AnimationVariant>("rectangle");
@@ -469,7 +469,7 @@ export const useThemeToggle = ({
 
   const styleId = "theme-transition-styles";
 
-  const updateStyles = useCallback((css: string, name: string) => {
+  const updateStyles = useCallback((css: string) => {
     if (typeof window === "undefined") return;
 
     let styleElement = document.getElementById(styleId) as HTMLStyleElement;
@@ -488,7 +488,7 @@ export const useThemeToggle = ({
 
     const animation = createAnimation(variant, start, blur, gifUrl);
 
-    updateStyles(animation.css, animation.name);
+    updateStyles(animation.css);
 
     if (typeof window === "undefined") return;
 
@@ -519,7 +519,7 @@ export const useThemeToggle = ({
 
     const animation = createAnimation(variant, start, blur, gifUrl);
 
-    updateStyles(animation.css, animation.name);
+    updateStyles(animation.css);
 
     if (typeof window === "undefined") return;
 
@@ -540,7 +540,7 @@ export const useThemeToggle = ({
 
     const animation = createAnimation(variant, start, blur, gifUrl);
 
-    updateStyles(animation.css, animation.name);
+    updateStyles(animation.css);
 
     if (typeof window === "undefined") return;
 
@@ -567,7 +567,7 @@ export const useThemeToggle = ({
 
     const animation = createAnimation(variant, start, blur, gifUrl);
 
-    updateStyles(animation.css, animation.name);
+    updateStyles(animation.css);
 
     const switchTheme = () => {
       setTheme("system");

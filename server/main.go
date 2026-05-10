@@ -42,7 +42,7 @@ func main() {
 	user.Get("/confirm-email-change", handlers.ConfirmEmailChange)
 
 	// Admin Routes (Protected)
-	admin := app.Group("/admin", middleware.Auth, middleware.CEOOnly)
+	admin := app.Group("/admin", middleware.Auth, middleware.AdminOnly)
 	admin.Get("/applications", handlers.GetPendingApplications)
 	admin.Get("/applications/count", handlers.GetPendingApplicationsCount)
 	admin.Post("/applications/:id/approve", handlers.ApproveApplication)

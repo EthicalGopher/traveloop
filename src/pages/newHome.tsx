@@ -7,11 +7,10 @@ import {
   ArrowRight,
   Camera,
   Globe,
-  Linkedin,
   ArrowUpRight,
   Loader2,
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 
 export default function App() {
@@ -116,12 +115,6 @@ export default function App() {
               href="#"
             >
               <Globe className="w-5 h-5" />
-            </a>
-            <a
-              className="text-lg font-bold hover:opacity-60 transition-opacity flex items-center justify-center"
-              href="#"
-            >
-              <Linkedin className="w-5 h-5" />
             </a>
           </div>
         </div>
@@ -434,3 +427,4 @@ function Contact() {
     </section>
   );
 }
+

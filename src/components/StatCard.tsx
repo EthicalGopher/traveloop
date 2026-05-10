@@ -1,6 +1,4 @@
 import React from "react";
-import type { LucideIcon } from "lucide-react";
-import { playHoverSound } from "../utils/audio";
 
 interface StatCardProps {
   label: string;
@@ -8,7 +6,7 @@ interface StatCardProps {
   trend?: string;
   trendColor?: string;
   progress?: number;
-  icon?: LucideIcon;
+  icon?: any;
   borderColor: string;
 }
 
@@ -23,7 +21,6 @@ const StatCard: React.FC<StatCardProps> = ({
 }) => {
   return (
     <div
-      onMouseEnter={playHoverSound}
       className={`bg-surface-container-lowest px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6 rounded-2xl sm:rounded-[2rem] md:rounded-full border-t-4 ${borderColor} ambient-shadow cursor-pointer hover:translate-y-1 hover:scale-[0.98] hover:shadow-inner hover:bg-surface-container-low transition-all duration-300 group flex flex-col justify-center`}
     >
       <p className={`text-on-surface-variant text-[8px] sm:text-[9px] md:text-[10px] font-bold tracking-[0.2em] uppercase font-label mb-1 md:mb-2 group-hover:text-${trendColor}-500 transition-colors truncate`}>

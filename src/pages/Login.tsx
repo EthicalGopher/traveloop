@@ -24,9 +24,15 @@ const Login = () => {
         body: JSON.stringify({ email, password }),
       });
       saveSession(session);
-      navigate("/dashboard");
-    } catch (err: any) {
-      setError(err.message);
+      
+      // Redirect based on role
+      if (session.user.role === "admin") {
+        navigate("/admin/workspace");
+      } else {
+        navigate("/");
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -44,8 +50,8 @@ const Login = () => {
         body: JSON.stringify({ email }),
       });
       setSuccessMessage(response.message);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }

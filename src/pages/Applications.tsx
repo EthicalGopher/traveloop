@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Check, X, User as UserIcon, Loader2 } from "lucide-react";
 import { api } from "../utils/api";
 
@@ -35,7 +35,7 @@ const Applications = () => {
     try {
       await api(`/admin/applications/${id}/${action}`, { method: "POST" });
       setApplications((prev) => prev.filter((app) => app.id !== id));
-    } catch (err) {
+    } catch {
       alert(`Failed to ${action} application`);
     } finally {
       setActionLoading(null);
@@ -54,10 +54,10 @@ const Applications = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
         <h3 className="text-2xl font-black text-on-surface tracking-tight uppercase italic font-display">
-          Pending Manager Applications
+          Pending Access Requests
         </h3>
         <p className="text-on-surface-variant font-medium">
-          Review and manage access requests for organization managers.
+          Review and manage access requests for organization users.
         </p>
       </div>
 

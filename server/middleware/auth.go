@@ -28,10 +28,10 @@ func Auth(c *fiber.Ctx) error {
 	return c.Next()
 }
 
-func CEOOnly(c *fiber.Ctx) error {
+func AdminOnly(c *fiber.Ctx) error {
 	role := c.Locals("role").(string)
-	if role != "ceo" {
-		return c.Status(403).JSON(fiber.Map{"error": "Forbidden: CEO access only"})
+	if role != "admin" {
+		return c.Status(403).JSON(fiber.Map{"error": "Forbidden: Admin access only"})
 	}
 	return c.Next()
 }

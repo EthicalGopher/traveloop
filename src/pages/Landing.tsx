@@ -1,17 +1,14 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
   LayoutGrid,
-  BarChart3,
   ShieldCheck,
   Activity,
   Bell,
   Monitor,
-  CheckCircle2,
   Lock,
   Layers,
-  ArrowUpRight,
   Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -77,8 +74,8 @@ export default function Landing() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
               <LayoutGrid size={18} />
             </div>
-            <span className="text-xl md:text-2xl font-black tracking-tight font-display uppercase italic">
-              DashboardTemplate
+            <span className="text-xl md:text-2xl font-black tracking-tight font-display uppercase italic text-sky-600">
+              Traveloop
             </span>
           </Link>
           {/* Mobile Theme Toggle */}
@@ -98,22 +95,22 @@ export default function Landing() {
         <div className="flex md:contents">
           <nav className="flex-1 md:col-span-4 border-r border-outline-variant/20 flex items-center justify-center gap-6 md:gap-8 px-4 md:px-8 py-4 md:py-0">
             <a
-              href="#features"
+              href="#destinations"
               className="uppercase opacity-70 hover:opacity-100 transition-opacity font-label text-xs tracking-widest font-bold"
             >
-              Features
+              Destinations
             </a>
             <a
-              href="#analytics"
+              href="#how-it-works"
               className="uppercase opacity-70 hover:opacity-100 transition-opacity font-label text-xs tracking-widest font-bold"
             >
-              Analytics
+              How it Works
             </a>
             <a
-              href="#docs"
+              href="#pricing"
               className="uppercase opacity-70 hover:opacity-100 transition-opacity font-label text-xs tracking-widest font-bold"
             >
-              Docs
+              Pricing
             </a>
           </nav>
           <div className="flex-1 md:col-span-2 md:border-r border-outline-variant/20 flex items-center justify-center gap-4 px-4 py-4 md:py-0">
@@ -128,12 +125,12 @@ export default function Landing() {
         </div>
 
         {/* Desktop Live Demo */}
-        <div className="hidden md:flex md:col-span-2 items-center justify-center bg-primary hover:bg-primary-dim transition-colors">
+        <div className="hidden md:flex md:col-span-2 items-center justify-center bg-orange-600 hover:bg-orange-700 transition-colors">
           <Link
             to="/signup"
             className="uppercase text-xs font-bold font-label tracking-widest text-white w-full h-full flex items-center justify-center"
           >
-            Live Demo
+            Join Now
           </Link>
         </div>
       </header>
@@ -144,7 +141,6 @@ export default function Landing() {
         <HomeSection />
         <TrustStrip />
         <FeaturesSection />
-        <AnalyticsSection />
         <CTASection />
       </div>
     </div>
@@ -156,12 +152,12 @@ function HomeSection() {
     <section id="home" className="grid grid-cols-1 lg:grid-cols-12 border-b border-outline-variant/20">
       {/* Left Graphic Column */}
       <div className="col-span-1 lg:col-span-8 lg:border-r lg:border-outline-variant/20 flex flex-col">
-        {/* Top Graphic Block - Dashboard Preview */}
-        <div className="flex-grow border-b border-outline-variant/20 relative overflow-hidden bg-surface-container-lowest min-h-[300px] md:min-h-[500px]">
+        {/* Top Graphic Block - Travel Preview */}
+        <div className="flex-grow border-b border-outline-variant/20 relative overflow-hidden bg-sky-50 min-h-[300px] md:min-h-[500px]">
           <img
-            alt="Dashboard Preview Animation"
-            className="absolute inset-0 w-full h-full object-cover opacity-90 grayscale dark:invert dark:opacity-40"
-            src="https://media.giphy.com/media/tq3BP6bsQ0Jwc/giphy.gif"
+            alt="Adventure Preview"
+            className="absolute inset-0 w-full h-full object-cover opacity-90"
+            src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent"></div>
         </div>
@@ -169,9 +165,9 @@ function HomeSection() {
         <div className="p-8 md:p-12 lg:p-16 bg-background relative flex flex-col sm:flex-row items-center justify-between gap-8 sm:gap-0">
           <div className="w-full text-center sm:text-left">
             <h1 className="text-5xl md:text-7xl lg:text-8xl xl:text-9xl font-black font-display uppercase italic tracking-tighter leading-[0.85] text-on-background">
-              Visualize Your
+              Discover Your
               <br />
-              <span className="text-primary">Digital Fortress</span>
+              <span className="text-sky-600">Next Adventure</span>
             </h1>
           </div>
           {/* Interactive Explore Circle Button */}
@@ -193,21 +189,21 @@ function HomeSection() {
         {/* Introduction Block */}
         <div className="flex-grow p-8 md:p-12 lg:p-16 flex flex-col justify-center border-b border-outline-variant/20">
           <div className="mb-8">
-             <ShieldCheck size={48} className="text-primary" />
+             <Activity size={48} className="text-sky-600" />
           </div>
           <p className="text-xl lg:text-2xl font-medium leading-relaxed text-on-surface-variant max-w-sm">
-            A high-performance React dashboard template designed for modern enterprise 
-            risk management, compliance tracking, and real-time security monitoring.
+            The ultimate companion for explorers. Plan journeys, track adventures, 
+            and discover hidden gems across the globe with our intelligent platform.
           </p>
         </div>
         {/* Get Started Link Block */}
         <Link
           to="/signup"
-          className="p-8 md:p-12 lg:p-16 flex-grow lg:flex-grow-0 lg:h-1/3 bg-primary flex items-center justify-center min-h-[150px] md:min-h-[200px] group hover:bg-primary-dim transition-colors text-white cursor-pointer"
+          className="p-8 md:p-12 lg:p-16 flex-grow lg:flex-grow-0 lg:h-1/3 bg-sky-600 flex items-center justify-center min-h-[150px] md:min-h-[200px] group hover:bg-sky-700 transition-colors text-white cursor-pointer"
         >
           <div className="flex items-center space-x-6">
             <span className="text-3xl md:text-4xl font-black font-display uppercase italic tracking-tighter">
-              Get Started
+              Start Journey
             </span>
             <ArrowRight
               className="w-12 h-8 transform group-hover:translate-x-2 transition-transform"
@@ -225,14 +221,14 @@ function TrustStrip() {
         <section className="py-12 border-b border-outline-variant/20 bg-surface-container-lowest overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 overflow-hidden">
             <p className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-on-surface-variant/60 mb-8 font-label">
-              Powered by Industry-Standard Technology
+              Trusted by 10,000+ Explorers Worldwide
             </p>
             <div className="flex flex-wrap justify-center gap-8 md:gap-20 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
-              <span className="text-2xl font-black italic tracking-tighter uppercase font-display">React 19</span>
-              <span className="text-2xl font-black italic tracking-tighter uppercase font-display">Tailwind 4</span>
-              <span className="text-2xl font-black italic tracking-tighter uppercase font-display">TypeScript</span>
-              <span className="text-2xl font-black italic tracking-tighter uppercase font-display">Vite</span>
-              <span className="text-2xl font-black italic tracking-tighter uppercase font-display">Lucide</span>
+              <span className="text-2xl font-black italic tracking-tighter uppercase font-display">Adventure Co</span>
+              <span className="text-2xl font-black italic tracking-tighter uppercase font-display">Globetrotter</span>
+              <span className="text-2xl font-black italic tracking-tighter uppercase font-display">Pathfinder</span>
+              <span className="text-2xl font-black italic tracking-tighter uppercase font-display">Summit</span>
+              <span className="text-2xl font-black italic tracking-tighter uppercase font-display">Voyage</span>
             </div>
           </div>
         </section>
@@ -242,34 +238,34 @@ function TrustStrip() {
 function FeaturesSection() {
   const features = [
     {
-      icon: <BarChart3 className="text-primary" size={24} />,
-      title: "Advanced Analytics",
-      desc: "Real-time data visualization with Recharts. Interactive, responsive, and theme-aware."
+      icon: <Layers className="text-sky-500" size={24} />,
+      title: "Smart Itineraries",
+      desc: "Automatically generated travel plans based on your interests and past adventures."
     },
     {
-      icon: <Lock className="text-blue-500" size={24} />,
-      title: "Secure Auth",
-      desc: "Pre-built login, signup, and password recovery flows with JWT integration."
+      icon: <Lock className="text-orange-500" size={24} />,
+      title: "Secure Bookings",
+      desc: "End-to-end encrypted booking system for flights, hotels, and local experiences."
     },
     {
       icon: <Monitor className="text-purple-500" size={24} />,
-      title: "Dark Mode 2.0",
-      desc: "Seamless view-transition-based theme switching with OLED support."
+      title: "Real-time Tracking",
+      desc: "Stay updated with live flight statuses, weather alerts, and local news."
     },
     {
-      icon: <Layers className="text-yellow-500" size={24} />,
-      title: "Component Library",
-      desc: "Clean, reusable components: StatCards, Charts, Banners, and Sidebar."
+      icon: <ShieldCheck className="text-yellow-500" size={24} />,
+      title: "Travel Safety",
+      desc: "Verified emergency contacts and local safety guidelines for every destination."
     },
     {
       icon: <Activity className="text-green-500" size={24} />,
-      title: "Incident Monitoring",
-      desc: "Specialized views for tracking risks, patches, and security incidents."
+      title: "Adventure Stats",
+      desc: "Visualize your travel history with interactive maps and personalized statistics."
     },
     {
       icon: <Bell className="text-red-500" size={24} />,
-      title: "Real-time Alerts",
-      desc: "Built-in notification system to keep administrators informed instantly."
+      title: "Smart Alerts",
+      desc: "Get notified about price drops, nearby attractions, and personalized deals."
     }
   ];
 
@@ -278,23 +274,23 @@ function FeaturesSection() {
       <div className="grid grid-cols-1 lg:grid-cols-12 border-b border-outline-variant/20">
         <div className="col-span-1 lg:col-span-6 p-8 md:p-12 lg:p-16 lg:border-r lg:border-outline-variant/20 flex flex-col justify-center">
           <h2 className="text-5xl md:text-7xl lg:text-8xl font-black font-display uppercase italic tracking-tighter leading-none mb-8">
-            Enterprise
+            Why Choose
             <br />
-            <span className="text-primary">Features</span>
+            <span className="text-sky-600">Traveloop</span>
           </h2>
           <p className="text-xl md:text-2xl leading-relaxed text-on-surface-variant font-medium">
-            A comprehensive toolkit for building robust, secure, and insightful administrative interfaces.
+            We provide everything you need to make your next trip unforgettable, safe, and perfectly organized.
           </p>
         </div>
-        <div className="col-span-1 lg:col-span-6 bg-surface-container-lowest flex items-center justify-center p-8">
+        <div className="col-span-1 lg:col-span-6 bg-sky-50 flex items-center justify-center p-8">
              <div className="grid grid-cols-2 gap-8 w-full">
                 <div className="aspect-square bg-background rounded-2xl flex flex-col items-center justify-center p-6 text-center border border-outline-variant/10">
-                    <ShieldCheck size={40} className="text-primary mb-4" />
-                    <span className="text-sm font-bold font-label uppercase tracking-widest">Security First</span>
+                    <ShieldCheck size={40} className="text-sky-600 mb-4" />
+                    <span className="text-sm font-bold font-label uppercase tracking-widest">Safe & Secure</span>
                 </div>
                 <div className="aspect-square bg-background rounded-2xl flex flex-col items-center justify-center p-6 text-center border border-outline-variant/10">
-                    <Activity size={40} className="text-primary mb-4" />
-                    <span className="text-sm font-bold font-label uppercase tracking-widest">Real-time</span>
+                    <Activity size={40} className="text-sky-600 mb-4" />
+                    <span className="text-sm font-bold font-label uppercase tracking-widest">Live Updates</span>
                 </div>
              </div>
         </div>
@@ -317,91 +313,21 @@ function FeaturesSection() {
   );
 }
 
-function AnalyticsSection() {
-  return (
-    <section id="analytics" className="grid grid-cols-1 lg:grid-cols-12 border-b border-outline-variant/20 bg-background">
-      <div className="col-span-1 lg:col-span-6 p-8 md:p-12 lg:p-16 lg:border-r lg:border-outline-variant/20 flex flex-col justify-center order-2 lg:order-1">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 self-start">
-            <BarChart3 size={16} className="text-primary" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary font-label">
-                Data-Driven Insights
-            </span>
-        </div>
-        <h2 className="text-5xl md:text-7xl lg:text-8xl font-black font-display uppercase italic tracking-tighter leading-none mb-8">
-          Insightful
-          <br />
-          <span className="text-primary">Analytics</span>
-        </h2>
-        <p className="text-xl md:text-2xl leading-relaxed text-on-surface-variant font-medium mb-12">
-          Transform complex security data into clear, actionable insights. 
-          Our template includes specialized charts for risk distribution, 
-          compliance trends, and incident frequency.
-        </p>
-        <ul className="space-y-6">
-          {[
-            "Dynamic Risk Scoring widgets",
-            "Compliance Trend monitoring",
-            "Vendor Criticality tracking",
-            "Real-time patching status"
-          ].map((item, i) => (
-            <li key={i} className="flex items-center gap-4 font-bold text-sm uppercase tracking-widest font-label">
-              <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white">
-                <CheckCircle2 size={12} />
-              </div>
-              {item}
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="col-span-1 lg:col-span-6 bg-surface-container-lowest min-h-[400px] flex items-center justify-center p-8 order-1 lg:order-2 lg:border-l lg:border-outline-variant/20">
-          <div className="w-full max-w-md bg-background rounded-3xl border border-outline-variant/20 p-8 shadow-xl relative overflow-hidden group">
-                <div className="flex items-center justify-between mb-8 pb-4 border-b border-outline-variant/10">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-red-500/40"></div>
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/40"></div>
-                    <div className="w-3 h-3 rounded-full bg-green-500/40"></div>
-                  </div>
-                  <span className="text-[10px] font-bold text-on-surface-variant/60 font-label tracking-widest uppercase">System Analytics</span>
-                </div>
-                <div className="space-y-6">
-                  <div className="h-4 bg-primary/20 rounded w-full"></div>
-                  <div className="h-32 bg-surface-container-lowest rounded-xl flex items-end gap-2 p-4 border border-outline-variant/10">
-                    <div className="bg-primary/30 w-full h-[60%] rounded-t-lg transition-all group-hover:h-[80%]"></div>
-                    <div className="bg-primary/50 w-full h-[80%] rounded-t-lg transition-all group-hover:h-[40%]"></div>
-                    <div className="bg-primary/30 w-full h-[40%] rounded-t-lg transition-all group-hover:h-[90%]"></div>
-                    <div className="bg-primary w-full h-[95%] rounded-t-lg shadow-lg shadow-primary/30 transition-all group-hover:h-[60%]"></div>
-                    <div className="bg-primary/50 w-full h-[70%] rounded-t-lg transition-all group-hover:h-[85%]"></div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="h-4 bg-on-surface-variant/10 rounded w-full"></div>
-                    <div className="h-4 bg-on-surface-variant/10 rounded w-2/3"></div>
-                  </div>
-                </div>
-                {/* Decorative Crosshair */}
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                    <LayoutGrid size={80} />
-                </div>
-          </div>
-      </div>
-    </section>
-  );
-}
-
 function CTASection() {
   return (
-    <section className="grid grid-cols-1 lg:grid-cols-12 bg-primary">
+    <section className="grid grid-cols-1 lg:grid-cols-12 bg-sky-600">
       <div className="col-span-1 lg:col-span-8 p-8 md:p-12 lg:p-16 lg:border-r border-white/10 flex flex-col justify-center">
         <h2 className="text-5xl md:text-7xl lg:text-9xl font-black font-display uppercase italic tracking-tighter leading-[0.85] text-white mb-12">
-          Build Your
+          Start Your
           <br />
-          Next Dashboard
+          Next Journey
           <br />
           <span className="text-white/40">Today.</span>
         </h2>
         <div className="flex flex-col sm:flex-row gap-6">
              <Link 
               to="/signup" 
-              className="px-10 py-6 bg-white text-primary font-bold font-label uppercase tracking-widest text-center hover:bg-gray-100 transition-colors"
+              className="px-10 py-6 bg-white text-sky-600 font-bold font-label uppercase tracking-widest text-center hover:bg-gray-100 transition-colors"
             >
               Get Started for Free
             </Link>
@@ -409,7 +335,7 @@ function CTASection() {
               to="/login" 
               className="px-10 py-6 border-2 border-white text-white font-bold font-label uppercase tracking-widest text-center hover:bg-white/10 transition-colors"
             >
-              Live Preview
+              Sign In
             </Link>
         </div>
       </div>
@@ -419,14 +345,14 @@ function CTASection() {
                 Capabilities
             </p>
             <ul className="space-y-4 text-xl md:text-2xl font-black font-display uppercase italic tracking-tighter">
-                <li className="border-b border-white/10 pb-4">React 19</li>
-                <li className="border-b border-white/10 pb-4">Tailwind 4</li>
-                <li className="border-b border-white/10 pb-4">TypeScript</li>
-                <li className="pb-4">Lucide Icons</li>
+                <li className="border-b border-white/10 pb-4">Smart Itineraries</li>
+                <li className="border-b border-white/10 pb-4">Secure Bookings</li>
+                <li className="border-b border-white/10 pb-4">Real-time Maps</li>
+                <li className="pb-4">Local Guides</li>
             </ul>
           </div>
           <div className="pt-12">
-             <p className="text-sm font-medium opacity-60 mb-4">© 2026 DashboardTemplate</p>
+             <p className="text-sm font-medium opacity-60 mb-4">© 2026 Traveloop</p>
              <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                 <span className="text-[10px] font-bold uppercase tracking-widest font-label">All Systems Operational</span>

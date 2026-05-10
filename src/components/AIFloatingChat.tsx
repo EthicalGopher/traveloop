@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2, Sparkles, AlertCircle, X, Minimize2, MessageSquare } from "lucide-react";
+import { Send, Bot, User, Loader2, X, Minimize2, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "../utils/api";
 import { cn } from "../lib/utils";
@@ -75,11 +75,11 @@ const AIFloatingChat = () => {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "system",
-        content: error.message || "Failed to connect to AI server.",
+        content: error instanceof Error ? error.message : "Failed to connect to AI server.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);

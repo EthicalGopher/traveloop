@@ -54,8 +54,8 @@ const Settings = () => {
       setMessage({ type: "success", text: response.message });
       setPassword(""); 
       setCurrentPassword("");
-    } catch (err: any) {
-      setMessage({ type: "error", text: err.message });
+    } catch (err: unknown) {
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Something went wrong" });
     } finally {
       setLoading(false);
     }
@@ -85,8 +85,8 @@ const Settings = () => {
         saveSession({ ...session, user: updatedUser });
       }
       setMessage({ type: "success", text: "Profile picture updated!" });
-    } catch (err: any) {
-      setMessage({ type: "error", text: err.message });
+    } catch (err: unknown) {
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Something went wrong" });
     } finally {
       setAvatarLoading(false);
     }

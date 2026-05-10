@@ -28,3 +28,8 @@ logs:
 
 clean:
 	docker-compose down --rmi all --volumes --remove-orphans
+
+publish:
+	git add .
+	git commit -m "update"
+	git push origin main

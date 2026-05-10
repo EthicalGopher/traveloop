@@ -1,5 +1,3 @@
-import React from "react";
-
 const IncidentFrequencyChart = () => {
   return (
     <div className="lg:col-span-8 bg-surface-container-lowest rounded-xl p-4 sm:p-6 md:p-8 flex flex-col ambient-shadow">

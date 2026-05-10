@@ -1,8 +1,13 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import AdminLogin from "./pages/AdminLogin";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -18,6 +23,7 @@ export default function App() {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <Router>
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
@@ -25,19 +31,24 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/confirm-email-change" element={<ConfirmEmailChange />} />
           
-          {/* Protected Dashboard Routes */}
-          <Route element={<DashboardLayout />}>
-            <Route path="/home" element={<Home />} />
-            <Route path="/workspace" element={<Dashboard />} />
-            <Route path="/applications" element={<Applications />} />
-            <Route path="/risk-management" element={<RiskManagement />} />
-            <Route path="/compliance" element={<Compliance />} />
-            <Route path="/settings" element={<Settings />} />
+          {/* Admin Login */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          
+          {/* Protected Admin Routes */}
+          <Route path="/admin" element={<DashboardLayout />}>
+            <Route path="home" element={<Home />} />
+            <Route path="workspace" element={<Dashboard />} />
+            <Route path="applications" element={<Applications />} />
+            <Route path="risk-management" element={<RiskManagement />} />
+            <Route path="compliance" element={<Compliance />} />
+            <Route path="settings" element={<Settings />} />
             
-            {/* Default dashboard redirect */}
-            <Route path="/dashboard" element={<Navigate to="/workspace" replace />} />
+            {/* Default admin redirect */}
+            <Route index element={<Navigate to="workspace" replace />} />
           </Route>
 
+          {/* Compatibility & Fallbacks */}
+          <Route path="/dashboard" element={<Navigate to="/admin/workspace" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

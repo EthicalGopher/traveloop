@@ -15,21 +15,21 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, title }) => {
   const { role } = useAuth();
   const [notificationCount, setNotificationCount] = useState(0);
 
-  const fetchNotificationCount = async () => {
-    if (role === "ceo") {
-      try {
-        const data = await api("/admin/applications/count");
-        setNotificationCount(data.count);
-      } catch (err) {
-        console.error("Failed to fetch notification count:", err);
-      }
-    }
-  };
-
   useEffect(() => {
+    const fetchNotificationCount = async () => {
+      if (role === "admin") {
+        try {
+          const data = await api("/admin/applications/count");
+          setNotificationCount(data.count);
+        } catch (err) {
+          console.error("Failed to fetch notification count:", err);
+        }
+      }
+    };
+
     fetchNotificationCount();
-    let interval: any;
-    if (role === "ceo") {
+    let interval: ReturnType<typeof setInterval> | undefined;
+    if (role === "admin") {
       interval = setInterval(fetchNotificationCount, 30000);
     }
     return () => {
@@ -38,8 +38,13 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, title }) => {
   }, [role]);
 
   const handleLogout = () => {
+    const isAdmin = role === "admin";
     clearSession();
-    navigate("/login");
+    if (isAdmin) {
+      navigate("/admin/login");
+    } else {
+      navigate("/login");
+    }
   };
 
   return (

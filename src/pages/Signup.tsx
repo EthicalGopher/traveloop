@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Rocket, Loader2, ChevronDown } from "lucide-react";
+import { Rocket, Loader2 } from "lucide-react";
 import { api } from "../utils/api";
 import { saveSession } from "../utils/auth";
 
@@ -9,7 +9,6 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState("user");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -27,7 +26,7 @@ const Signup = () => {
           email,
           password,
           full_name: fullName,
-          role,
+          role: "public",
         }),
       });
 
@@ -40,10 +39,10 @@ const Signup = () => {
       } else {
         // Direct login for active users
         saveSession(response);
-        navigate("/dashboard");
+        navigate("/");
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -60,10 +59,10 @@ const Signup = () => {
             <Rocket size={24} />
           </div>
           <h1 className="text-2xl font-extrabold text-on-surface tracking-tight mb-2">
-            Join Platform
+            Join Traveloop
           </h1>
           <p className="text-on-surface-variant text-sm font-medium">
-            Set up your enterprise environment
+            Start your next adventure today
           </p>
         </div>
 
@@ -125,23 +124,6 @@ const Signup = () => {
                 placeholder="Create a strong password"
                 required
               />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2 ml-1">
-                Organization Role
-              </label>
-              <div className="relative">
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="w-full appearance-none bg-surface-container-highest rounded-lg px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/40 border-none transition-all cursor-pointer"
-                >
-                  <option value="user">User</option>
-                  <option value="manager">Manager</option>
-                  <option value="ceo">CEO (Super Admin)</option>
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" size={16} />
-              </div>
             </div>
             <button
               type="submit"

@@ -21,38 +21,31 @@ func Signup(c *fiber.Ctx) error {
 		return utils.RespondWithError(c, err, "Invalid request details provided", 400)
 	}
 
-	validRoles := map[string]bool{"user": true, "ceo": true, "manager": true}
+	validRoles := map[string]bool{"public": true, "admin": true}
 	if req.Role == "" {
-		req.Role = "user"
+		req.Role = "public"
 	}
 	if !validRoles[req.Role] {
 		return utils.RespondWithError(c, nil, "The selected role is not valid", 400)
 	}
 
 	status := "active"
-	if req.Role == "manager" {
-		status = "pending"
+	role := req.Role
+	if req.Email == "admin@traveloop.com" {
+		role = "admin"
 	}
 
 	user := models.User{
 		Email:           req.Email,
 		Password:        req.Password,
 		FullName:        req.FullName,
-		Role:            req.Role,
+		Role:            role,
 		Status:          status,
 		IsEmailVerified: true, // Verified by default now
 	}
 
 	if err := database.DB.Create(&user).Error; err != nil {
 		return utils.RespondWithError(c, err, "Could not create your account", 400)
-	}
-
-	// If pending manager, return message
-	if user.Status == "pending" {
-		return c.Status(201).JSON(fiber.Map{
-			"message": "Application submitted. Please wait for CEO approval.",
-			"user":    user,
-		})
 	}
 
 	// For others, login directly
@@ -84,7 +77,7 @@ func Login(c *fiber.Ctx) error {
 	// Verification check removed as requested
 
 	if user.Status == "pending" {
-		return utils.RespondWithError(c, nil, "Your account is currently waiting for approval from the CEO", 401)
+		return utils.RespondWithError(c, nil, "Your account is currently waiting for approval from the administrator", 401)
 	}
 
 	if user.Status == "rejected" {

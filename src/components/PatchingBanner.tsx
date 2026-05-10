@@ -1,5 +1,3 @@
-import React from "react";
-
 const PatchingBanner = () => {
   return (
     <div className="bg-gradient-to-br from-red-500 via-yellow-500 to-blue-500 rounded-xl p-8 text-white relative overflow-hidden shadow-lg shadow-yellow-500/20 cursor-pointer group hover:-translate-y-1 transition-transform duration-300">
