@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { LogOut, User, MapPin, Shield, Wallet, Loader2 } from "lucide-react";
+import { LogOut, User, Shield, Wallet, Loader2 } from "lucide-react";
 import { useAuth } from "../../utils/auth";
 import { api } from "../../utils/api";
 

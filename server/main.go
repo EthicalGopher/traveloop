@@ -61,6 +61,12 @@ func main() {
 	trips.Delete("/:id", handlers.DeleteTrip)
 	trips.Post("/:id/itinerary", handlers.AddItinerary)
 	trips.Post("/:id/budget", handlers.AddBudget)
+	trips.Post("/:id/note", handlers.AddNote)
+	trips.Put("/:id/share", handlers.ToggleShareTrip)
+
+	// Community Routes (Public)
+	community := app.Group("/community")
+	community.Get("/trips", handlers.GetPublicTrips)
 
 	log.Fatal(app.Listen(":8080"))
 }

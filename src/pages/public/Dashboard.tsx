@@ -1,18 +1,21 @@
 import { useState, useEffect } from "react";
 import { 
-  Search, ArrowRight, Globe, Layers, ChevronDown, 
-  Wallet, Clock, SlidersHorizontal, X, Star, Plus, Heart, Plane, Home, 
-  ChevronRight, PlaneTakeoff, Compass 
+  Search, ArrowRight, 
+  SlidersHorizontal, Star, Heart, 
+  PlaneTakeoff, Plus 
 } from "lucide-react";
 import { useAuth } from "../../utils/auth";
 import { api } from "../../utils/api";
 import { featuredDestinations, categories } from "../../data/travelData";
 import { motion } from "framer-motion";
+import CreateTripModal from "./components/CreateTripModal";
 
 export function Dashboard() {
   const { user } = useAuth();
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState("");
 
   useEffect(() => {
     const fetchTrips = async () => {
@@ -27,6 +30,11 @@ export function Dashboard() {
     };
     fetchTrips();
   }, []);
+
+  const openCreateModal = (placeName: string = "") => {
+    setSelectedPlace(placeName);
+    setIsModalOpen(true);
+  };
 
   const displayName = user?.full_name?.split(' ')[0] || "Traveler";
 
@@ -55,62 +63,56 @@ export function Dashboard() {
             <span className="inline-block px-3 py-1 bg-primary/80 backdrop-blur-md rounded-full font-label text-xs font-medium mb-3 text-on-primary">Featured Destination</span>
             <h2 className="font-display text-4xl md:text-5xl font-bold text-white mb-2 leading-tight">Santorini, Greece</h2>
             <p className="font-body text-base text-white/90 mb-6 max-w-md line-clamp-2 md:line-clamp-none">Experience the breathtaking sunsets and iconic white architecture overlooking the Aegean Sea.</p>
-            <button className="bg-primary text-on-primary px-6 py-3 rounded-lg font-label text-sm font-semibold hover:bg-primary-container transition-colors shadow-sm flex items-center gap-2 w-max cursor-pointer">
+            <button 
+              onClick={() => openCreateModal("Santorini, Greece")}
+              className="bg-primary text-on-primary px-6 py-3 rounded-lg font-label text-sm font-semibold hover:bg-primary-container transition-colors shadow-sm flex items-center gap-2 w-max cursor-pointer"
+            >
               <span>Plan this trip</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </section>
 
-        {/* My Trips Quick View */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-headline text-xl font-bold text-text-primary">My Trips</h2>
-            <button className="text-primary font-label text-sm font-bold hover:underline cursor-pointer">View All</button>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {loading ? (
-              [1, 2, 3].map(i => (
-                <div key={i} className="h-24 bg-surface-container-low animate-pulse rounded-xl border border-border-subtle"></div>
-              ))
-            ) : trips.length > 0 ? (
-              trips.map(trip => (
-                <div key={trip.id} className="bg-surface-canvas p-4 rounded-xl border border-border-subtle shadow-sm flex items-center gap-4 hover:border-primary transition-all cursor-pointer group">
-                  <div className="w-16 h-16 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden shrink-0">
-                    {trip.image ? (
-                      <img src={trip.image} className="w-full h-full object-cover" alt="" />
-                    ) : (
-                      <PlaneTakeoff className="text-primary w-8 h-8" />
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-headline text-base font-bold text-text-primary truncate">{trip.title}</h3>
-                    <p className="font-body text-xs text-text-secondary truncate">{trip.destination}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${
-                        trip.status === 'ongoing' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                      }`}>
-                        {trip.status}
-                      </span>
+        {/* My Trips Quick View - Only show if trips exist */}
+        {(loading || trips.length > 0) && (
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-headline text-xl font-bold text-text-primary">My Trips</h2>
+              <button className="text-primary font-label text-sm font-bold hover:underline cursor-pointer">View All</button>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {loading ? (
+                [1, 2, 3].map(i => (
+                  <div key={i} className="h-24 bg-surface-container-low animate-pulse rounded-xl border border-border-subtle"></div>
+                ))
+              ) : (
+                trips.map(trip => (
+                  <div key={trip.id} className="bg-surface-canvas p-4 rounded-xl border border-border-subtle shadow-sm flex items-center gap-4 hover:border-primary transition-all cursor-pointer group">
+                    <div className="w-16 h-16 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden shrink-0">
+                      {trip.image ? (
+                        <img src={trip.image} className="w-full h-full object-cover" alt="" />
+                      ) : (
+                        <PlaneTakeoff className="text-primary w-8 h-8" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-headline text-base font-bold text-text-primary truncate">{trip.title}</h3>
+                      <p className="font-body text-xs text-text-secondary truncate">{trip.destination}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${
+                          trip.status === 'ongoing' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {trip.status}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
-            ) : (
-              <div className="col-span-full py-10 bg-surface-background rounded-xl border-2 border-dashed border-border-subtle flex flex-col items-center justify-center text-center px-4">
-                <div className="p-4 bg-surface-canvas rounded-full shadow-sm mb-4">
-                  <Plane className="w-8 h-8 text-text-secondary" />
-                </div>
-                <h3 className="font-headline text-lg font-bold text-text-primary">No trips planned yet</h3>
-                <p className="font-body text-sm text-text-secondary mt-1 max-w-xs">Start planning your next adventure today!</p>
-                <button className="mt-4 bg-primary text-on-primary px-6 py-2 rounded-lg font-label text-sm font-bold hover:opacity-90 transition-opacity cursor-pointer">
-                  Create Trip
-                </button>
-              </div>
-            )}
-          </div>
-        </section>
+                ))
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Exploration Section */}
         <section className="space-y-6">
@@ -143,9 +145,9 @@ export function Dashboard() {
               <motion.div
                 key={dest.id}
                 whileHover={{ y: -8 }}
-                className="bg-surface-canvas rounded-2xl overflow-hidden border border-border-subtle shadow-sm group hover:shadow-xl transition-all cursor-pointer"
+                className="bg-surface-canvas rounded-2xl overflow-hidden border border-border-subtle shadow-sm group hover:shadow-xl transition-all cursor-pointer flex flex-col"
               >
-                <div className="relative h-64 overflow-hidden">
+                <div className="relative h-64 overflow-hidden shrink-0">
                   <img 
                     src={dest.image} 
                     alt={dest.title}
@@ -160,7 +162,7 @@ export function Dashboard() {
                     <Heart size={18} />
                   </button>
                 </div>
-                <div className="p-6 space-y-4">
+                <div className="p-6 flex flex-col flex-1 gap-4">
                   <div className="flex items-center justify-between">
                     <h3 className="font-headline text-xl font-bold text-text-primary">{dest.title}</h3>
                     <div className="flex items-center gap-1">
@@ -171,13 +173,17 @@ export function Dashboard() {
                   <p className="font-body text-sm text-text-secondary line-clamp-2">
                     {dest.description}
                   </p>
-                  <div className="flex items-center justify-between pt-2 border-t border-border-subtle/50">
+                  <div className="mt-auto flex items-center justify-between pt-4 border-t border-border-subtle/50">
                     <div>
                       <span className="text-[10px] text-text-secondary font-bold uppercase tracking-widest">Starting from</span>
-                      <p className="text-2xl font-bold text-primary">{dest.price}</p>
+                      <p className="text-xl font-bold text-primary">{dest.price}</p>
                     </div>
-                    <button className="p-3 bg-surface-container-high text-primary rounded-xl group-hover:bg-primary group-hover:text-on-primary transition-colors">
-                      <Compass size={20} />
+                    <button 
+                      onClick={() => openCreateModal(dest.title)}
+                      className="bg-primary/10 text-primary hover:bg-primary hover:text-on-primary p-2 md:px-4 md:py-2 rounded-lg font-label text-xs font-bold transition-all flex items-center gap-2"
+                    >
+                      <Plus size={16} />
+                      <span className="hidden sm:inline">Add Trip</span>
                     </button>
                   </div>
                 </div>
@@ -186,6 +192,12 @@ export function Dashboard() {
           </div>
         </section>
       </div>
+
+      <CreateTripModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        initialPlace={selectedPlace}
+      />
     </div>
   );
 }

@@ -108,3 +108,51 @@ func AddBudget(c *fiber.Ctx) error {
 
 	return c.Status(201).JSON(budget)
 }
+
+// Note Handlers
+
+func AddNote(c *fiber.Ctx) error {
+	tripID := c.Params("id")
+	note := new(models.Note)
+
+	if err := c.BodyParser(note); err != nil {
+		return utils.RespondWithError(c, err, "Invalid request body", 400)
+	}
+
+	note.TripID = utils.StringToUint(tripID)
+	if err := database.DB.Create(note).Error; err != nil {
+		return utils.RespondWithError(c, err, "Failed to add note", 500)
+	}
+
+	return c.Status(201).JSON(note)
+}
+
+func ToggleShareTrip(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
+	id := c.Params("id")
+
+	var trip models.Trip
+	if err := database.DB.Where("id = ? AND user_id = ?", id, userID).First(&trip).Error; err != nil {
+		return utils.RespondWithError(c, err, "Trip not found", 404)
+	}
+
+	trip.IsPublic = !trip.IsPublic
+	if err := database.DB.Save(&trip).Error; err != nil {
+		return utils.RespondWithError(c, err, "Failed to toggle share status", 500)
+	}
+
+	return c.JSON(fiber.Map{
+		"message":   "Trip share status updated",
+		"is_public": trip.IsPublic,
+	})
+}
+
+func GetPublicTrips(c *fiber.Ctx) error {
+	var trips []models.Trip
+	// We want to see some details even in the community list
+	if err := database.DB.Preload("Itineraries").Where("is_public = ?", true).Order("created_at desc").Find(&trips).Error; err != nil {
+		return utils.RespondWithError(c, err, "Failed to fetch public trips", 500)
+	}
+
+	return c.JSON(trips)
+}

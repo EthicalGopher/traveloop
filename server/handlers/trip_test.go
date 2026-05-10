@@ -89,3 +89,29 @@ func TestGetTrips(t *testing.T) {
 		t.Errorf("Expected 2 trips, got %d", len(trips))
 	}
 }
+
+func TestToggleShareTrip(t *testing.T) {
+	setupTestDB()
+	database.DB.Create(&models.Trip{ID: 1, Title: "Trip 1", UserID: 1, IsPublic: false})
+
+	app := fiber.New()
+	app.Use(func(c *fiber.Ctx) error {
+		c.Locals("user_id", uint(1))
+		return c.Next()
+	})
+	app.Put("/trips/:id/share", ToggleShareTrip)
+
+	req := httptest.NewRequest("PUT", "/trips/1/share", nil)
+	resp, _ := app.Test(req)
+
+	if resp.StatusCode != 200 {
+		t.Errorf("Expected status code 200, got %d", resp.StatusCode)
+	}
+
+	var result fiber.Map
+	json.NewDecoder(resp.Body).Decode(&result)
+
+	if result["is_public"] != true {
+		t.Errorf("Expected is_public to be true, got %v", result["is_public"])
+	}
+}

@@ -15,6 +15,7 @@ type Trip struct {
 	Image       string         `json:"image"`
 	Status      string         `gorm:"default:upcoming" json:"status"` // upcoming, ongoing, completed
 	Category    string         `json:"category"`
+	IsPublic    bool           `gorm:"default:false" json:"is_public"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`

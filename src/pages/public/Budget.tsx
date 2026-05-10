@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Map, Edit2, Landmark, Train, Utensils, AlertTriangle, PlusCircle, MapPin, Loader2, DollarSign, Wallet, Plane, Car, ShoppingBag, Coffee } from "lucide-react";
+import { Landmark, Utensils, AlertTriangle, PlusCircle, Loader2, DollarSign, Wallet, Plane, Car, X } from "lucide-react";
 import { api } from "../../utils/api";
 import { useAuth } from "../../utils/auth";
 
@@ -9,6 +9,13 @@ export function Budget() {
   const [selectedTrip, setSelectedTrip] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailsLoading, setDetailsLoading] = useState(false);
+  const [isAddingExpense, setIsAddingExpense] = useState(false);
+  
+  const [expenseForm, setExpenseForm] = useState({
+    category: "Food",
+    amount: "",
+    currency: "USD"
+  });
 
   useEffect(() => {
     const fetchTrips = async () => {
@@ -28,7 +35,7 @@ export function Budget() {
     fetchTrips();
   }, [isAuthenticated]);
 
-  const fetchTripDetails = async (id: string) => {
+  const fetchTripDetails = async (id: string | number) => {
     setDetailsLoading(true);
     try {
       const data = await api(`/trips/${id}`);
@@ -37,6 +44,28 @@ export function Budget() {
       console.error("Failed to fetch trip details:", err);
     } finally {
       setDetailsLoading(false);
+    }
+  };
+
+  const handleAddExpense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTrip || !expenseForm.amount) return;
+
+    try {
+      await api(`/trips/${selectedTrip.id}/budget`, {
+        method: "POST",
+        body: JSON.stringify({
+          category: expenseForm.category,
+          amount: parseFloat(expenseForm.amount),
+          currency: expenseForm.currency
+        })
+      });
+      setIsAddingExpense(false);
+      setExpenseForm({ category: "Food", amount: "", currency: "USD" });
+      fetchTripDetails(selectedTrip.id);
+    } catch (err) {
+      console.error("Failed to add expense:", err);
+      alert("Failed to add expense");
     }
   };
 
@@ -49,7 +78,7 @@ export function Budget() {
     switch (category.toLowerCase()) {
       case 'food': return <Utensils className="w-5 h-5" />;
       case 'transport': return <Plane className="w-5 h-5" />;
-      case 'accommodation': return <Car className="w-5 h-5" />; // Placeholder
+      case 'accommodation': return <Car className="w-5 h-5" />;
       case 'activities': return <Landmark className="w-5 h-5" />;
       default: return <DollarSign className="w-5 h-5" />;
     }
@@ -81,7 +110,7 @@ export function Budget() {
         <p className="text-text-secondary mb-6">Create a trip first to manage its budget.</p>
         <button 
           onClick={() => window.dispatchEvent(new CustomEvent('openCreateTrip'))}
-          className="bg-primary text-on-primary px-6 py-2 rounded-lg"
+          className="bg-primary text-on-primary px-6 py-2 rounded-lg font-bold"
         >
           Create Trip
         </button>
@@ -123,11 +152,62 @@ export function Budget() {
             <div className="xl:col-span-7 flex flex-col gap-6">
               <div className="flex items-center justify-between">
                 <h2 className="font-headline text-xl font-bold text-text-primary">Expenses for {selectedTrip.title}</h2>
-                <button className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg text-sm font-bold shadow-sm">
+                <button 
+                  onClick={() => setIsAddingExpense(true)}
+                  className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:opacity-90 transition-opacity"
+                >
                   <PlusCircle className="w-4 h-4" />
                   Add Expense
                 </button>
               </div>
+
+              {isAddingExpense && (
+                <form onSubmit={handleAddExpense} className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-end animate-in slide-in-from-top-2 duration-200">
+                   <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-black uppercase text-primary tracking-widest">Category</label>
+                        <select 
+                          value={expenseForm.category}
+                          onChange={(e) => setExpenseForm({...expenseForm, category: e.target.value})}
+                          className="bg-white border border-primary/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                        >
+                          <option>Food</option>
+                          <option>Transport</option>
+                          <option>Accommodation</option>
+                          <option>Activities</option>
+                          <option>Misc</option>
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-black uppercase text-primary tracking-widest">Amount ($)</label>
+                        <input 
+                          type="number" 
+                          step="0.01"
+                          required
+                          value={expenseForm.amount}
+                          onChange={(e) => setExpenseForm({...expenseForm, amount: e.target.value})}
+                          className="bg-white border border-primary/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                          placeholder="0.00"
+                        />
+                      </div>
+                   </div>
+                   <div className="flex gap-2 w-full sm:w-auto">
+                      <button 
+                        type="button" 
+                        onClick={() => setIsAddingExpense(false)}
+                        className="p-2.5 rounded-lg border border-primary/20 text-primary hover:bg-white transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                      <button 
+                        type="submit"
+                        className="flex-1 sm:flex-none bg-primary text-on-primary px-6 py-2.5 rounded-lg text-sm font-bold shadow-md hover:opacity-90"
+                      >
+                        Save
+                      </button>
+                   </div>
+                </form>
+              )}
               
               <div className="space-y-4">
                 {selectedTrip.budgets?.length > 0 ? (
@@ -137,7 +217,7 @@ export function Budget() {
                         {getCategoryIcon(item.category)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-title text-base font-bold text-text-primary truncate">{item.category}</h3>
+                        <h3 className="font-title text-base font-bold text-text-primary truncate capitalize">{item.category}</h3>
                         <p className="text-xs text-text-secondary">{new Date(item.created_at).toLocaleDateString()}</p>
                       </div>
                       <div className="text-right">
@@ -148,8 +228,8 @@ export function Budget() {
                   ))
                 ) : (
                   <div className="text-center py-12 bg-surface-canvas rounded-xl border border-dashed border-border-subtle">
-                    <DollarSign className="w-12 h-12 text-text-secondary mx-auto mb-4" />
-                    <p className="text-text-secondary">No expenses added yet.</p>
+                    <DollarSign className="w-12 h-12 text-text-secondary mx-auto mb-4 opacity-20" />
+                    <p className="text-text-secondary italic">No expenses added yet.</p>
                   </div>
                 )}
               </div>
@@ -157,21 +237,20 @@ export function Budget() {
 
             {/* Right Panel: Summary */}
             <div className="xl:col-span-5 flex flex-col gap-6">
-              <div className="bg-surface-canvas border border-border-subtle rounded-2xl p-6 shadow-sm">
-                <h2 className="font-title text-xl font-medium text-text-primary mb-6">Budget Summary</h2>
+              <div className="bg-surface-canvas border border-border-subtle rounded-3xl p-8 shadow-sm">
+                <h2 className="font-headline text-xl font-bold text-text-primary mb-6 italic uppercase tracking-tighter">Budget Summary</h2>
                 
                 <div className="mb-8">
-                  <p className="font-body text-sm text-text-secondary">Total Expenses</p>
-                  <h3 className="font-display text-5xl font-bold text-text-primary mt-1">
+                  <p className="font-label text-[10px] font-black text-text-secondary uppercase tracking-widest">Total Expenses</p>
+                  <h3 className="font-display text-5xl font-bold text-primary mt-2">
                     ${calculateTotal().toFixed(2)}
                   </h3>
                 </div>
 
                 <div className="space-y-6">
-                  <h4 className="font-body text-base font-medium text-text-primary">Breakdown</h4>
+                  <h4 className="font-headline text-sm font-bold text-text-primary uppercase tracking-wider">Breakdown</h4>
                   {selectedTrip.budgets?.length > 0 ? (
                     <div className="space-y-4">
-                      {/* Group by category and show breakdown */}
                       {Object.entries(
                         selectedTrip.budgets.reduce((acc: any, b: any) => {
                           acc[b.category] = (acc[b.category] || 0) + b.amount;
@@ -179,11 +258,11 @@ export function Budget() {
                         }, {})
                       ).map(([category, amount]: [any, any]) => (
                         <div key={category} className="space-y-2">
-                          <div className="flex justify-between items-center text-sm">
-                            <span className="font-medium text-text-primary capitalize">{category}</span>
-                            <span className="text-text-secondary">${amount.toFixed(2)}</span>
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-bold text-text-primary uppercase tracking-wide capitalize">{category}</span>
+                            <span className="text-text-secondary font-display font-medium">${amount.toFixed(2)}</span>
                           </div>
-                          <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+                          <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
                             <div 
                               className={`${getCategoryColor(category)} h-full rounded-full`} 
                               style={{ width: `${(amount / calculateTotal()) * 100}%` }}
@@ -193,7 +272,7 @@ export function Budget() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-text-secondary italic">No data to display</p>
+                    <p className="text-xs text-text-secondary italic opacity-60">No breakdown available yet</p>
                   )}
                 </div>
               </div>
@@ -211,8 +290,8 @@ export function Budget() {
             </div>
           </div>
         ) : (
-          <div className="text-center py-20">
-            <p className="text-text-secondary">Select a trip to view budget details.</p>
+          <div className="text-center py-20 bg-surface-canvas rounded-3xl border-2 border-dashed border-border-subtle">
+            <p className="text-text-secondary italic">Select a trip to view budget details.</p>
           </div>
         )}
       </main>

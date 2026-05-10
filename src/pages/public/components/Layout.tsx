@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, Outlet, Navigate } from "react-router-dom";
 import { 
   PlaneTakeoff, 
@@ -6,7 +6,6 @@ import {
   Users, 
   Calendar, 
   Wallet, 
-  Settings, 
   HelpCircle, 
   User, 
   FileText,
@@ -16,15 +15,17 @@ import {
 } from "lucide-react";
 import { CreateTripModal } from "./CreateTripModal";
 import { useAuth } from "../../../utils/auth";
+import { api } from "../../../utils/api";
 
 export function Layout() {
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const location = useLocation();
   const path = location.pathname;
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [prefilledPlace, setPrefilledPlace] = useState("");
+  const [tripCounts, setTripCounts] = useState({ ongoing: 0, upcoming: 0, completed: 0 });
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleOpenModal = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       setPrefilledPlace(detail?.place || "");
@@ -33,6 +34,24 @@ export function Layout() {
     window.addEventListener("openCreateTrip", handleOpenModal);
     return () => window.removeEventListener("openCreateTrip", handleOpenModal);
   }, []);
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      if (!session) return;
+      try {
+        const trips = await api("/trips");
+        const counts = {
+          ongoing: trips.filter((t: any) => t.status === 'ongoing').length,
+          upcoming: trips.filter((t: any) => t.status === 'upcoming').length,
+          completed: trips.filter((t: any) => t.status === 'completed').length,
+        };
+        setTripCounts(counts);
+      } catch (err) {
+        console.error("Failed to fetch trip counts:", err);
+      }
+    };
+    fetchCounts();
+  }, [session, location.pathname]);
 
   if (!session) {
     return <Navigate to="/login" replace />;
@@ -82,7 +101,7 @@ export function Layout() {
         <div className="flex flex-col gap-1 flex-grow overflow-y-auto overflow-x-hidden pr-2 -mr-2">
           
           <div className="font-label text-xs uppercase text-text-secondary mt-1 mb-2 px-4">Discover</div>
-          <Link to="/dashboard" className={getLinkClasses(["/dashboard", "/dashboard/builder"])}>
+          <Link to="/dashboard" className={getLinkClasses(["/dashboard"])}>
             <Compass className="w-5 h-5" />
             <span className="font-body text-sm">Explore</span>
           </Link>
@@ -94,38 +113,34 @@ export function Layout() {
           <div className="font-label text-xs uppercase text-text-secondary mt-6 mb-2 px-4">My Trips</div>
           <Link to="/dashboard/itinerary#ongoing" className={getLinkClasses(["/dashboard/itinerary"], "#ongoing")}>
             <PlayCircle className="w-5 h-5 text-itinerary-stay" />
-            <span className="font-body text-sm">Ongoing (1)</span>
+            <span className="font-body text-sm">Ongoing ({tripCounts.ongoing})</span>
           </Link>
           <Link to="/dashboard/itinerary#upcoming" className={getLinkClasses(["/dashboard/itinerary"], "#upcoming")}>
             <Clock className="w-5 h-5 text-primary" />
-            <span className="font-body text-sm">Upcoming (2)</span>
+            <span className="font-body text-sm">Upcoming ({tripCounts.upcoming})</span>
           </Link>
           <Link to="/dashboard/itinerary#completed" className={getLinkClasses(["/dashboard/itinerary"], "#completed")}>
             <CheckCircle2 className="w-5 h-5 text-text-secondary" />
-            <span className="font-body text-sm">Completed (12)</span>
+            <span className="font-body text-sm">Completed ({tripCounts.completed})</span>
           </Link>
 
           <div className="flex flex-col mt-6 bg-surface-container-highest/20 rounded-xl p-2 pb-3 mb-2">
             <div className="font-label text-xs uppercase text-primary mb-2 px-2 flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
-              Current Trip: Paris
+              Trip Management
             </div>
             <div className="flex flex-col gap-1">
               <Link to="/dashboard/itinerary" className={getLinkClasses(["/dashboard/itinerary"], "")}>
                 <Calendar className="w-5 h-5" />
-                <span className="font-body text-sm">Itinerary</span>
+                <span className="font-body text-sm">All Itineraries</span>
               </Link>
               <Link to="/dashboard/budget" className={getLinkClasses(["/dashboard/budget"])}>
                 <Wallet className="w-5 h-5" />
-                <span className="font-body text-sm">Budget</span>
+                <span className="font-body text-sm">Budgets</span>
               </Link>
               <Link to="/dashboard/notes" className={getLinkClasses(["/dashboard/notes"])}>
                 <FileText className="w-5 h-5" />
-                <span className="font-body text-sm">Trip Notes</span>
-              </Link>
-              <Link to="/dashboard/profile" className={getLinkClasses(["/dashboard/profile", "/dashboard/settings"])}>
-                <Settings className="w-5 h-5" />
-                <span className="font-body text-sm">Trip Settings</span>
+                <span className="font-body text-sm">All Notes</span>
               </Link>
             </div>
           </div>
@@ -157,9 +172,12 @@ export function Layout() {
              {/* Centered Space for Desktop if needed */}
           </div>
           <div className="flex items-center gap-4 ml-auto">
-            <div className="w-8 h-8 rounded-full bg-primary-container overflow-hidden cursor-pointer">
-              <img alt="User profile avatar" className="w-full h-full object-cover" src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=150" />
-            </div>
+            <Link to="/dashboard/profile" className="flex items-center gap-3">
+              <span className="text-sm font-medium text-text-primary hidden sm:inline">{user?.full_name}</span>
+              <div className="w-8 h-8 rounded-full bg-primary-container overflow-hidden cursor-pointer flex items-center justify-center text-on-primary-container font-bold text-xs">
+                {user?.full_name?.[0]}
+              </div>
+            </Link>
           </div>
         </header>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Calendar, Compass, MapPin, Filter, Loader2, Plus, GripVertical, Save, Trash2 } from "lucide-react";
+import { Calendar, Filter, Loader2, Plus, Trash2 } from "lucide-react";
 import { api } from "../../utils/api";
 import { useAuth } from "../../utils/auth";
 import { featuredDestinations } from "../../data/travelData";

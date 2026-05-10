@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { X, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../../utils/api";
-import { useAuth } from "../../utils/auth";
-import { featuredDestinations } from "../../data/travelData";
+import { api } from "../../../utils/api";
+import { useAuth } from "../../../utils/auth";
+import { featuredDestinations, type Destination } from "../../../data/travelData";
 
 interface CreateTripModalProps {
   isOpen: boolean;
@@ -59,7 +59,7 @@ export function CreateTripModal({ isOpen, onClose, initialPlace }: CreateTripMod
       });
 
       onClose();
-      navigate(`/builder?id=${trip.id}`);
+      navigate(`/dashboard/builder?id=${trip.id}`);
     } catch (err: any) {
       setError(err.message || "Failed to create trip");
     } finally {
@@ -67,7 +67,7 @@ export function CreateTripModal({ isOpen, onClose, initialPlace }: CreateTripMod
     }
   };
 
-  const selectSuggestion = (place: typeof featuredDestinations[0]) => {
+  const selectSuggestion = (place: Destination) => {
     setFormData(prev => ({
       ...prev,
       destination: place.title,
@@ -199,4 +199,5 @@ export function CreateTripModal({ isOpen, onClose, initialPlace }: CreateTripMod
     </div>
   );
 }
+
 export default CreateTripModal;
