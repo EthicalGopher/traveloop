@@ -1,74 +1,89 @@
-# React + TypeScript + Vite
+# Traveloop 🌍
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Traveloop is a modern, AI-powered travel planning and community platform. It allows users to build detailed itineraries, manage travel budgets, and share their journeys with a global community of explorers. It also features a robust administrative suite for platform management and data analytics.
 
-Currently, two official plugins are available:
+## 🚀 Key Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### For Explorers
+- **Trip Builder**: Design comprehensive multi-day itineraries with ease.
+- **Budget Management**: Track your travel expenses across categories like transport, accommodation, and activities.
+- **Community Stories**: Share your legendary routes and discover hidden gems from fellow travelers.
+- **Interactive Maps**: Seamlessly visualize and navigate your path with Google Maps integration.
+- **AI-Powered Insights**: Leveraging Gemini AI to enhance the trip-planning experience.
 
-## React Compiler
+### For Administrators
+- **Command Center**: A high-level overview of platform health, explorer growth, and recent activity.
+- **User Management**: Oversee the user directory and monitor individual travel activities.
+- **Trends & Analytics**: Real-time data visualization of popular cities, trending activities, and growth velocity.
+- **Access Control**: Secure role-based routing (Admin vs. Public) with a dedicated Admin Console.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Technology Stack
 
-## Expanding the ESLint configuration
+### Frontend
+- **Framework**: React 19 (TypeScript)
+- **Build Tool**: Vite 8
+- **Styling**: Tailwind CSS 4 with custom Aurora UI & Glassmorphism themes
+- **Animation**: Framer Motion
+- **Data Visualization**: Recharts
+- **Icons**: Lucide React
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Backend
+- **Language**: Go 1.25
+- **Web Framework**: Fiber v2
+- **ORM**: GORM
+- **Database**: SQLite (GopherBase)
+- **Authentication**: JWT (JSON Web Tokens)
+- **AI Integration**: Google Generative AI (Gemini)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Infrastructure
+- **Containerization**: Docker & Docker Compose
+- **Orchestration**: Makefile for service management
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 📦 Project Structure
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+├── server/               # Go Fiber Backend
+│   ├── handlers/         # API Route Handlers
+│   ├── models/           # GORM Database Models
+│   ├── middleware/       # Auth & Role Protection
+│   └── database/         # SQLite Connection & Migrations
+├── src/                  # React Frontend
+│   ├── pages/            # Page Components (Public & Admin)
+│   ├── components/       # Reusable UI Elements
+│   ├── layouts/          # Dashboard & Public Layouts
+│   ├── utils/            # API Client & Auth Logic
+│   └── lib/              # Styling Utilities
+├── public/               # Static Assets
+└── Dockerfile            # Multi-stage builds for deployment
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🏁 Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prerequisites
+- [Docker](https://www.docker.com/)
+- [Docker Compose](https://docs.docker.com/compose/)
+- [Node.js](https://nodejs.org/) (for local development)
+- [Go](https://go.dev/) (for local development)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-# dashboardtemplate1
+### Quick Start
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/your-repo/traveloop.git
+    cd traveloop
+    ```
+2.  **Environment Setup**:
+    Copy `.env.example` to `.env` and provide your `GEMINI_API_KEY`.
+3.  **Launch Services**:
+    ```bash
+    make restart
+    ```
+    Access the application at `http://localhost:4173` and the backend API at `http://localhost:8080`.
+
+## 🔄 Development Workflow
+
+- **Role-Based Access**: The system uses two roles: `public` and `admin`. Admin pages are prefixed with `/admin`.
+- **Admin Bootstrapping**: The email `admin@traveloop.com` is automatically granted the `admin` role during signup for testing purposes.
+- **Service Management**: Always run `make restart` after making code changes to ensure the Docker containers are synchronized.
+
+## 📜 License
+This project is licensed under the MIT License.
