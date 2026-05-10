@@ -8,6 +8,7 @@ import (
 type Trip struct {
 	ID          uint           `gorm:"primaryKey" json:"id"`
 	UserID      uint           `gorm:"index;not null" json:"user_id"`
+	User        User           `json:"user"`
 	Title       string         `gorm:"not null" json:"title"`
 	Destination string         `gorm:"not null" json:"destination"`
 	StartDate   *time.Time     `json:"start_date"`
@@ -15,7 +16,11 @@ type Trip struct {
 	Image       string         `json:"image"`
 	Status      string         `gorm:"default:upcoming" json:"status"` // upcoming, ongoing, completed
 	Category    string         `json:"category"`
+	MapURL      string         `json:"map_url"`
 	IsPublic    bool           `gorm:"default:false" json:"is_public"`
+	Rating      float64        `gorm:"default:0" json:"rating"`
+	Likes       int            `gorm:"default:0" json:"likes"`
+	Bookmarks   int            `gorm:"default:0" json:"bookmarks"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`

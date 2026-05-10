@@ -15,6 +15,7 @@ interface Trip {
   id: string | number;
   title: string;
   notes?: Note[];
+  map_url?: string;
 }
 
 export function Notes() {

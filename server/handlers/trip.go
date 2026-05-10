@@ -1,11 +1,28 @@
 package handlers
 
 import (
+	"time"
+
 	"github.com/dashboardtemplate/server/database"
 	"github.com/dashboardtemplate/server/models"
 	"github.com/dashboardtemplate/server/utils"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
+
+func calculateTripStatus(trip *models.Trip) {
+	if trip.StartDate == nil {
+		return
+	}
+	now := time.Now()
+	if now.Before(*trip.StartDate) {
+		trip.Status = "upcoming"
+	} else if trip.EndDate != nil && now.After(*trip.EndDate) {
+		trip.Status = "completed"
+	} else {
+		trip.Status = "ongoing"
+	}
+}
 
 func CreateTrip(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(uint)
@@ -16,6 +33,8 @@ func CreateTrip(c *fiber.Ctx) error {
 	}
 
 	trip.UserID = userID
+	calculateTripStatus(trip)
+
 	if err := database.DB.Create(trip).Error; err != nil {
 		return utils.RespondWithError(c, err, "Failed to create trip", 500)
 	}
@@ -31,6 +50,10 @@ func GetTrips(c *fiber.Ctx) error {
 		return utils.RespondWithError(c, err, "Failed to retrieve trips", 500)
 	}
 
+	for i := range trips {
+		calculateTripStatus(&trips[i])
+	}
+
 	return c.JSON(trips)
 }
 
@@ -43,6 +66,8 @@ func GetTrip(c *fiber.Ctx) error {
 		return utils.RespondWithError(c, err, "Trip not found", 404)
 	}
 
+	calculateTripStatus(&trip)
+
 	return c.JSON(trip)
 }
 
@@ -54,6 +79,9 @@ func UpdateTrip(c *fiber.Ctx) error {
 	if err := c.BodyParser(trip); err != nil {
 		return utils.RespondWithError(c, err, "Invalid request body", 400)
 	}
+
+	// Recalculate status if dates changed
+	calculateTripStatus(trip)
 
 	if err := database.DB.Model(&models.Trip{}).Where("id = ? AND user_id = ?", id, userID).Updates(trip).Error; err != nil {
 		return utils.RespondWithError(c, err, "Failed to update trip", 500)
@@ -224,10 +252,25 @@ func ToggleShareTrip(c *fiber.Ctx) error {
 
 func GetPublicTrips(c *fiber.Ctx) error {
 	var trips []models.Trip
-	// We want to see some details even in the community list
-	if err := database.DB.Preload("Itineraries").Where("is_public = ?", true).Order("created_at desc").Find(&trips).Error; err != nil {
+	if err := database.DB.Preload("User").Preload("Itineraries").Where("is_public = ?", true).Order("created_at desc").Find(&trips).Error; err != nil {
 		return utils.RespondWithError(c, err, "Failed to fetch public trips", 500)
 	}
 
 	return c.JSON(trips)
+}
+
+func LikeTrip(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if err := database.DB.Model(&models.Trip{}).Where("id = ?", id).Update("likes", gorm.Expr("likes + 1")).Error; err != nil {
+		return utils.RespondWithError(c, err, "Failed to like trip", 500)
+	}
+	return c.JSON(fiber.Map{"message": "Trip liked"})
+}
+
+func BookmarkTrip(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if err := database.DB.Model(&models.Trip{}).Where("id = ?", id).Update("bookmarks", gorm.Expr("bookmarks + 1")).Error; err != nil {
+		return utils.RespondWithError(c, err, "Failed to bookmark trip", 500)
+	}
+	return c.JSON(fiber.Map{"message": "Trip bookmarked"})
 }

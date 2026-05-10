@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { 
   Upload, Flame, Mountain, PiggyBank, Baby, Utensils, 
   SlidersHorizontal, Star, Heart, Bookmark, X, MapPin, 
-  Info, Plus, Loader2
+  Info, Plus, Loader2, Map as MapIcon
 } from "lucide-react";
 import { api } from "../../utils/api";
 import { useAuth } from "../../utils/auth";
@@ -15,14 +15,24 @@ interface ItineraryItem {
   location: string;
 }
 
+interface User {
+  full_name: string;
+}
+
 interface PublicTrip {
   id: string | number;
+  user_id: number;
+  user: User;
   title: string;
   destination: string;
   image?: string;
   category?: string;
+  rating: number;
+  likes: number;
+  bookmarks: number;
   created_at: string;
   itineraries?: ItineraryItem[];
+  map_url?: string;
 }
 
 export function Community() {
@@ -37,8 +47,8 @@ export function Community() {
     try {
       const data = await api("/community/trips");
       setPublicTrips(data);
-    } catch (err) {
-      console.error("Failed to fetch public trips:", err);
+    } catch {
+      console.error("Failed to fetch public trips");
     } finally {
       setLoading(false);
     }
@@ -47,6 +57,26 @@ export function Community() {
   useEffect(() => {
     fetchPublicTrips();
   }, []);
+
+  const handleLike = async (e: React.MouseEvent, id: string | number) => {
+    e.stopPropagation();
+    try {
+      await api(`/community/trips/${id}/like`, { method: "POST" });
+      setPublicTrips(prev => prev.map(t => t.id === id ? { ...t, likes: t.likes + 1 } : t));
+    } catch {
+      alert("Failed to like trip");
+    }
+  };
+
+  const handleBookmark = async (e: React.MouseEvent, id: string | number) => {
+    e.stopPropagation();
+    try {
+      await api(`/community/trips/${id}/bookmark`, { method: "POST" });
+      setPublicTrips(prev => prev.map(t => t.id === id ? { ...t, bookmarks: t.bookmarks + 1 } : t));
+    } catch {
+      alert("Failed to bookmark trip");
+    }
+  };
 
   const openSelectTrip = () => {
     setIsSelectModalOpen(true);
@@ -111,12 +141,13 @@ export function Community() {
                   layoutId={`dest-${dest.id}`}
                   onClick={() => setSelectedDest(dest)}
                   whileHover={{ y: -10 }}
-                  className="bg-surface-canvas rounded-[2.5rem] border border-border-subtle overflow-hidden shadow-sm hover:shadow-xl transition-all group cursor-pointer flex flex-col h-[450px]"
+                  className="bg-surface-canvas rounded-[2.5rem] border border-border-subtle overflow-hidden shadow-sm hover:shadow-xl transition-all group cursor-pointer flex flex-col h-[480px]"
                 >
                   <div className="relative h-2/3 overflow-hidden">
                     <img alt={dest.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src={dest.image || "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2000&auto=format&fit=crop"} />
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full w-10 h-10 flex items-center justify-center shadow-md">
+                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full w-14 h-10 flex items-center justify-center shadow-md gap-1">
                       <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                      <span className="text-xs font-black text-on-surface">{dest.rating > 0 ? dest.rating.toFixed(1) : "N/A"}</span>
                     </div>
                     <div className="absolute bottom-4 left-4">
                       <span className="bg-primary text-on-primary px-4 py-1 rounded-full text-[10px] font-black uppercase italic tracking-widest shadow-sm">
@@ -128,26 +159,33 @@ export function Community() {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-headline text-2xl font-black text-on-surface truncate pr-4 uppercase">{dest.title}</h4>
-                        <span className="text-primary font-display font-bold">4.9</span>
                       </div>
-                      <p className="font-body text-sm text-text-secondary line-clamp-2 leading-relaxed italic">Explore the hidden gems of {dest.destination}.</p>
+                      <p className="font-body text-sm text-text-secondary line-clamp-2 leading-relaxed italic">Explore {dest.destination}.</p>
                     </div>
                     <div className="flex items-center justify-between pt-4 border-t border-border-subtle/50">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-black text-xs border border-border-subtle">
-                          {dest.title[0]}
+                          {dest.user?.full_name ? dest.user.full_name[0] : "?"}
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-label text-[10px] font-black uppercase text-on-surface">Explore User</span>
+                          <span className="font-label text-[10px] font-black uppercase text-on-surface">{dest.user?.full_name || "Traveler"}</span>
                           <span className="font-body text-[10px] text-text-secondary">{new Date(dest.created_at).toLocaleDateString()}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 text-text-secondary">
-                        <button className="p-2 hover:text-red-500 transition-colors">
-                          <Heart className="w-4 h-4" />
+                      <div className="flex items-center gap-4 text-text-secondary">
+                        <button 
+                          onClick={(e) => handleLike(e, dest.id)}
+                          className="flex items-center gap-1 hover:text-red-500 transition-colors group/btn"
+                        >
+                          <Heart className={`w-4 h-4 ${dest.likes > 0 ? 'fill-red-500 text-red-500' : ''}`} />
+                          <span className="text-[10px] font-bold">{dest.likes}</span>
                         </button>
-                        <button className="p-2 hover:text-primary transition-colors">
-                          <Bookmark className="w-4 h-4" />
+                        <button 
+                          onClick={(e) => handleBookmark(e, dest.id)}
+                          className="flex items-center gap-1 hover:text-primary transition-colors group/btn"
+                        >
+                          <Bookmark className={`w-4 h-4 ${dest.bookmarks > 0 ? 'fill-primary text-primary' : ''}`} />
+                          <span className="text-[10px] font-bold">{dest.bookmarks}</span>
                         </button>
                       </div>
                     </div>
@@ -199,7 +237,7 @@ export function Community() {
                   <div className="flex items-center gap-6 mt-4">
                      <div className="flex items-center gap-2 text-yellow-500">
                        <Star size={20} fill="currentColor" />
-                       <span className="font-display text-xl font-bold">4.9</span>
+                       <span className="font-display text-xl font-bold">{selectedDest.rating > 0 ? selectedDest.rating.toFixed(1) : "No Rating"}</span>
                      </div>
                      <div className="flex items-center gap-2 text-text-secondary">
                         <MapPin size={20} />
@@ -245,12 +283,12 @@ export function Community() {
                           Add to My Trips
                         </button>
                         <a 
-                            href={selectedDest.mapUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedDest.title)}`}
+                            href={selectedDest.map_url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedDest.title)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-6 bg-white text-[#1a73e8] border border-[#1a73e8] py-4 rounded-xl font-label text-sm font-black uppercase tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
                         >
-                          <Map size={20} />
+                          <MapIcon size={20} />
                           Map
                         </a>
                      </div>

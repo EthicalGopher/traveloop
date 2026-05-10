@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { 
   Search, ArrowRight, 
   SlidersHorizontal, Star, Heart, 
-  PlaneTakeoff, Plus 
+  PlaneTakeoff, Plus, Map 
 } from "lucide-react";
 import { useAuth } from "../../utils/auth";
 import { api } from "../../utils/api";
@@ -16,6 +16,7 @@ interface Trip {
   destination: string;
   image?: string;
   status: string;
+  map_url?: string;
 }
 
 export function Dashboard() {

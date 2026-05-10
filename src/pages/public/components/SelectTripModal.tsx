@@ -14,6 +14,7 @@ interface Trip {
   destination: string;
   image: string;
   is_public: boolean;
+  map_url?: string;
 }
 
 export default function SelectTripModal({ isOpen, onClose, onShared }: SelectTripModalProps) {

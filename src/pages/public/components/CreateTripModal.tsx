@@ -23,7 +23,8 @@ export function CreateTripModal({ isOpen, onClose, initialPlace }: CreateTripMod
     start_date: "",
     end_date: "",
     category: "Adventure",
-    image: ""
+    image: "",
+    map_url: ""
   });
 
   useEffect(() => {
@@ -73,7 +74,8 @@ export function CreateTripModal({ isOpen, onClose, initialPlace }: CreateTripMod
       destination: place.title,
       image: place.image,
       category: place.category,
-      title: `My Trip to ${place.title}`
+      title: `My Trip to ${place.title}`,
+      map_url: place.mapUrl || ""
     }));
   };
 

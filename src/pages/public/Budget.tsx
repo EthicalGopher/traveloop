@@ -17,6 +17,7 @@ interface Trip {
   title: string;
   destination: string;
   budgets?: BudgetEntry[];
+  map_url?: string;
 }
 
 export function Budget() {

@@ -22,6 +22,7 @@ interface Trip {
   start_date: string;
   end_date: string;
   itineraries?: ItineraryItem[];
+  map_url?: string;
 }
 
 export function Builder() {

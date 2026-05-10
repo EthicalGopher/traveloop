@@ -121,6 +121,46 @@ export const featuredDestinations: Destination[] = [
     mapUrl: "https://www.google.com/maps/search/?api=1&query=Hampi+Karnataka+India"
   },
   {
+    id: 13,
+    title: "Mumbai City",
+    image: "https://images.unsplash.com/photo-1570160897040-3a2b5170193e?auto=format&fit=crop&w=800&q=80",
+    price: "₹22,000",
+    rating: 4.8,
+    category: "City Break",
+    description: "The City of Dreams, known for its colonial architecture, Bollywood, and iconic Marine Drive.",
+    mapUrl: "https://www.google.com/maps/search/?api=1&query=Mumbai+Maharashtra+India"
+  },
+  {
+    id: 14,
+    title: "Rishikesh Yoga",
+    image: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80",
+    price: "₹12,000",
+    rating: 4.9,
+    category: "Cultural",
+    description: "The Yoga Capital of the World, situated in the foothills of the Himalayas along the Ganges.",
+    mapUrl: "https://www.google.com/maps/search/?api=1&query=Rishikesh+Uttarakhand+India"
+  },
+  {
+    id: 15,
+    title: "Munnar Tea Hills",
+    image: "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?auto=format&fit=crop&w=800&q=80",
+    price: "₹18,000",
+    rating: 4.8,
+    category: "Tropical",
+    description: "Rolling hills of tea plantations, misty valleys, and exotic flora in the Western Ghats.",
+    mapUrl: "https://www.google.com/maps/search/?api=1&query=Munnar+Kerala+India"
+  },
+  {
+    id: 16,
+    title: "Ladakh Pangong Lake",
+    image: "https://images.unsplash.com/photo-1589136142558-9dec889cc46e?auto=format&fit=crop&w=800&q=80",
+    price: "₹35,000",
+    rating: 4.9,
+    category: "Adventure",
+    description: "Stunning high-altitude lake known for its changing colors and dramatic mountain backdrop.",
+    mapUrl: "https://www.google.com/maps/search/?api=1&query=Pangong+Lake+Ladakh+India"
+  },
+  {
     id: 5,
     title: "Amalfi Coast, Italy",
     image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80",

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { 
   Map, Wallet, Plus, Share2, PlusCircle, MapPin,
   Plane, Home, PlaneTakeoff, Clock, CheckCircle2,
-  Calendar, FileText, Loader2, Trash2, Edit2, Info, Globe, GlobeLock, X
+  Calendar, FileText, Loader2, Trash2, Edit2, Info, Globe, GlobeLock, X, Star
 } from "lucide-react";
 import { api } from "../../utils/api";
 import { useAuth } from "../../utils/auth";
@@ -22,26 +22,31 @@ interface BudgetEntry {
   id: number;
   category: string;
   amount: number;
+  currency: string;
 }
 
 interface Note {
   id: number;
   title: string;
   content: string;
+  updated_at: string;
 }
 
 interface Trip {
   id: number;
   title: string;
   destination: string;
-  start_date: string;
-  end_date: string;
-  image?: string;
-  category?: string;
+  start_date: string | null;
+  end_date: string | null;
+  image: string;
+  category: string;
+  status: string;
   is_public: boolean;
-  itineraries?: ItineraryItem[];
-  budgets?: BudgetEntry[];
-  notes?: Note[];
+  map_url?: string;
+  rating: number;
+  itineraries: ItineraryItem[];
+  budgets: BudgetEntry[];
+  notes: Note[];
 }
 
 export function Itinerary() {
@@ -87,8 +92,8 @@ export function Itinerary() {
         image: data.image,
         category: data.category
       });
-    } catch (err) {
-      console.error("Failed to fetch trip details:", err);
+    } catch (_err) {
+      console.error("Failed to fetch trip details");
     } finally {
       setDetailsLoading(false);
     }
@@ -102,8 +107,8 @@ export function Itinerary() {
         if (data.length > 0 && !selectedTrip) {
           fetchTripDetails(data[0].id);
         }
-      } catch (err) {
-        console.error("Failed to fetch trips:", err);
+      } catch (_err) {
+        console.error("Failed to fetch trips");
       } finally {
         setLoading(false);
       }
@@ -137,8 +142,7 @@ export function Itinerary() {
       setEditingItem(null);
       setItineraryForm({ day: 1, time: "09:00 AM", activity: "", location: "", type: "activity", notes: "" });
       fetchTripDetails(selectedTrip.id);
-    } catch (err) {
-      console.error("Failed to save itinerary:", err);
+    } catch (_err) {
       alert("Failed to save itinerary item");
     }
   };
@@ -147,10 +151,8 @@ export function Itinerary() {
     if (!confirm("Delete this activity?")) return;
     try {
       await api(`/trips/itinerary/${itemId}`, { method: "DELETE" });
-      if (selectedTrip) {
-        fetchTripDetails(selectedTrip.id);
-      }
-    } catch {
+      if (selectedTrip) fetchTripDetails(selectedTrip.id);
+    } catch (_err) {
       alert("Failed to delete item");
     }
   };
@@ -166,10 +168,9 @@ export function Itinerary() {
       });
       setIsEditingTrip(false);
       fetchTripDetails(selectedTrip.id);
-      // Refresh list
       const data = await api("/trips");
       setTrips(data);
-    } catch {
+    } catch (_err) {
       alert("Failed to update trip");
     }
   };
@@ -181,7 +182,7 @@ export function Itinerary() {
       await api(`/trips/${id}`, { method: "DELETE" });
       setTrips(prev => prev.filter(t => t.id !== id));
       if (selectedTrip?.id === id) setSelectedTrip(null);
-    } catch {
+    } catch (_err) {
       alert("Failed to delete trip");
     }
   };
@@ -193,10 +194,23 @@ export function Itinerary() {
       const res = await api(`/trips/${selectedTrip.id}/share`, { method: "PUT" });
       setSelectedTrip({ ...selectedTrip, is_public: res.is_public });
       setTrips(prev => prev.map(t => t.id === selectedTrip.id ? { ...t, is_public: res.is_public } : t));
-    } catch {
+    } catch (_err) {
       alert("Failed to update share status");
     } finally {
       setIsSharing(false);
+    }
+  };
+
+  const handleUpdateRating = async (val: number) => {
+    if (!selectedTrip) return;
+    try {
+      await api(`/trips/${selectedTrip.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ rating: val })
+      });
+      setSelectedTrip({ ...selectedTrip, rating: val });
+    } catch {
+      alert("Failed to update rating");
     }
   };
 
@@ -211,6 +225,14 @@ export function Itinerary() {
       notes: item.notes
     });
     setIsAddingItinerary(true);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'ongoing': return 'bg-green-500/80 shadow-green-200';
+      case 'completed': return 'bg-gray-500/80 shadow-gray-200';
+      default: return 'bg-blue-500/80 shadow-blue-200';
+    }
   };
 
   if (!isAuthenticated) return null;
@@ -293,17 +315,51 @@ export function Itinerary() {
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
                   alt="" 
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-8 flex flex-col justify-end">
-                  <div className="flex items-end justify-between">
-                    <div>
-                      <span className="bg-primary/80 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-black uppercase italic tracking-widest mb-3 inline-block">
-                        {selectedTrip.category || "Adventure"}
-                      </span>
-                      <h2 className="font-display text-3xl md:text-4xl font-bold text-white leading-tight uppercase italic">{selectedTrip.title}</h2>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-8 flex flex-col justify-end">
+                  <div className="flex items-end justify-between gap-6">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="bg-primary/80 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-black uppercase italic tracking-widest">
+                          {selectedTrip.category || "Adventure"}
+                        </span>
+                        <span className={`backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-black uppercase italic tracking-widest shadow-lg ${getStatusColor(selectedTrip.status)}`}>
+                          {selectedTrip.status}
+                        </span>
+                      </div>
+                      <h2 className="font-display text-3xl md:text-4xl font-bold text-white leading-tight uppercase italic truncate">{selectedTrip.title}</h2>
+                      
+                      {/* Rating Selector */}
+                      <div className="flex items-center gap-1.5 mt-3 mb-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button 
+                            key={star}
+                            onClick={() => handleUpdateRating(star)}
+                            className="transition-transform hover:scale-125 active:scale-95"
+                          >
+                            <Star 
+                              size={18} 
+                              className={star <= selectedTrip.rating ? "text-yellow-400 fill-yellow-400" : "text-white/40"} 
+                            />
+                          </button>
+                        ))}
+                        <span className="text-white/60 text-[10px] font-black uppercase tracking-widest ml-2">Rate Trip</span>
+                      </div>
+
                       <div className="flex items-center gap-4 text-white/90 mt-2">
                          <div className="flex items-center gap-1.5">
                            <MapPin size={16} className="text-primary" />
                            <span className="font-label text-xs font-bold uppercase tracking-wide">{selectedTrip.destination}</span>
+                           {selectedTrip.map_url && (
+                             <a 
+                               href={selectedTrip.map_url} 
+                               target="_blank" 
+                               rel="noopener noreferrer"
+                               className="ml-1 p-1 bg-white/10 hover:bg-white/20 rounded-md transition-colors"
+                               title="View on Google Maps"
+                             >
+                               <Map size={12} className="text-white" />
+                             </a>
+                           )}
                          </div>
                          <div className="flex items-center gap-1.5 border-l border-white/20 pl-4">
                            <Calendar size={16} className="text-primary" />
@@ -313,7 +369,7 @@ export function Itinerary() {
                          </div>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 shrink-0">
                        <button 
                          onClick={handleToggleShare}
                          disabled={isSharing}

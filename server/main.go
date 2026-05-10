@@ -73,6 +73,8 @@ func main() {
 	// Community Routes (Public)
 	community := app.Group("/community")
 	community.Get("/trips", handlers.GetPublicTrips)
+	community.Post("/trips/:id/like", handlers.LikeTrip)
+	community.Post("/trips/:id/bookmark", handlers.BookmarkTrip)
 
 	log.Fatal(app.Listen(":8080"))
 }
