@@ -52,5 +52,15 @@ func main() {
 	ai := app.Group("/ai", middleware.Auth)
 	ai.Post("/chat", handlers.AIChat)
 
+	// Trip Routes
+	trips := app.Group("/trips", middleware.Auth)
+	trips.Post("/", handlers.CreateTrip)
+	trips.Get("/", handlers.GetTrips)
+	trips.Get("/:id", handlers.GetTrip)
+	trips.Put("/:id", handlers.UpdateTrip)
+	trips.Delete("/:id", handlers.DeleteTrip)
+	trips.Post("/:id/itinerary", handlers.AddItinerary)
+	trips.Post("/:id/budget", handlers.AddBudget)
+
 	log.Fatal(app.Listen(":8080"))
 }
