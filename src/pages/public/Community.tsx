@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { 
   Upload, Flame, 
   Star, Heart, Bookmark, X, MapPin, 
-  Info, Plus, Loader2, Map as MapIcon, Search
+  Info, Plus, Loader2, Map as MapIcon, Search, ChevronDown, ListFilter
 } from "lucide-react";
 import { api } from "../../utils/api";
 import { useAuth } from "../../utils/auth";
@@ -45,9 +45,10 @@ export function Community() {
   const [publicTrips, setPublicTrips] = useState<PublicTrip[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Search and Filter State
+  // Search, Filter and Sort State
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [sortBy, setSortBy] = useState("Newest");
 
   const fetchPublicTrips = async () => {
     try {
@@ -88,15 +89,35 @@ export function Community() {
     setIsSelectModalOpen(true);
   };
 
-  // Filtered Community Stories Logic
-  const filteredStories = useMemo(() => {
-    return publicTrips.filter(story => {
+  // Filtered and Sorted Community Stories Logic
+  const processedStories = useMemo(() => {
+    // 1. Filter
+    let result = publicTrips.filter(story => {
       const matchesCategory = selectedCategory === "All" || story.category === selectedCategory;
       const matchesSearch = story.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            story.destination.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [searchQuery, selectedCategory, publicTrips]);
+
+    // 2. Sort
+    switch (sortBy) {
+      case "Popularity":
+        result = [...result].sort((a, b) => b.likes_count - a.likes_count);
+        break;
+      case "Bookmarks":
+        result = [...result].sort((a, b) => b.bookmarks_count - a.bookmarks_count);
+        break;
+      case "Rating":
+        result = [...result].sort((a, b) => b.rating - a.rating);
+        break;
+      default:
+        // Newest (Default)
+        result = [...result].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        break;
+    }
+
+    return result;
+  }, [searchQuery, selectedCategory, sortBy, publicTrips]);
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-surface-background">
@@ -120,11 +141,11 @@ export function Community() {
             </div>
           </section>
 
-          {/* Search Bar - Just below banner */}
-          <section className="relative group max-w-3xl mx-auto w-full -mt-10 z-20 px-4 md:px-0 mb-12">
+          {/* Search & Sort Bar - Just below banner */}
+          <section className="relative group max-w-4xl mx-auto w-full -mt-10 z-20 px-4 md:px-0 mb-12">
             <div className="absolute inset-0 bg-primary/20 rounded-[2rem] blur-2xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
-            <div className="relative bg-surface-canvas rounded-[2rem] p-2 shadow-2xl border border-border-subtle flex items-center gap-2">
-              <div className="flex-1 flex items-center px-6 gap-3 border-r border-border-subtle/50">
+            <div className="relative bg-surface-canvas rounded-[2rem] p-2 shadow-2xl border border-border-subtle flex flex-col sm:flex-row items-center gap-2">
+              <div className="flex-1 flex items-center px-6 gap-3 w-full">
                 <Search className="text-primary w-6 h-6" />
                 <input 
                   type="text" 
@@ -134,9 +155,26 @@ export function Community() {
                   className="w-full py-4 text-lg font-headline font-bold focus:outline-none placeholder:text-text-secondary/30 text-text-primary bg-transparent"
                 />
               </div>
-              <button className="bg-primary text-on-primary px-10 py-4 rounded-[1.5rem] font-label text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg hidden sm:block">
-                Search
-              </button>
+              
+              <div className="flex items-center gap-2 w-full sm:w-auto px-2 sm:px-0 sm:pr-4 border-t sm:border-t-0 sm:border-l border-border-subtle/50 pt-2 sm:pt-0">
+                 <div className="relative flex-1 sm:flex-none min-w-[140px]">
+                    <ListFilter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
+                    <select 
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="w-full bg-surface-background border border-border-subtle rounded-xl pl-9 pr-8 py-2.5 text-xs font-black uppercase tracking-widest focus:ring-2 focus:ring-primary outline-none appearance-none cursor-pointer"
+                    >
+                      <option>Newest</option>
+                      <option>Popularity</option>
+                      <option>Bookmarks</option>
+                      <option>Rating</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" />
+                 </div>
+                 <button className="bg-primary text-on-primary px-8 py-2.5 rounded-xl font-label text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg hidden md:block">
+                  Search
+                 </button>
+              </div>
             </div>
           </section>
 
@@ -170,7 +208,7 @@ export function Community() {
           <div className="flex items-center justify-between mb-8">
             <h3 className="font-headline text-3xl font-black text-on-surface italic uppercase tracking-tighter">Community Stories</h3>
             <span className="text-xs font-black font-label text-primary uppercase tracking-widest bg-primary/5 px-4 py-1.5 rounded-full border border-primary/10">
-              {filteredStories.length} results found
+              {processedStories.length} results found
             </span>
           </div>
 
@@ -178,9 +216,9 @@ export function Community() {
             <div className="flex justify-center py-20">
               <Loader2 className="w-10 h-10 text-primary animate-spin" />
             </div>
-          ) : filteredStories.length > 0 ? (
+          ) : processedStories.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {filteredStories.map((dest) => (
+              {processedStories.map((dest) => (
                 <motion.div 
                   key={dest.id} 
                   layoutId={`dest-${dest.id}`}
@@ -223,14 +261,14 @@ export function Community() {
                           className={`flex items-center gap-1.5 transition-all group/btn hover:scale-110 ${dest.likes_count > 0 ? 'text-red-500' : ''}`}
                         >
                           <Heart className={`w-5 h-5 ${dest.likes_count > 0 ? 'fill-red-500 shadow-lg' : ''}`} />
-                          <span className="text-xs font-black">{dest.likes_count}</span>
+                          <span className="text-[10px] font-bold">{dest.likes_count}</span>
                         </button>
                         <button 
                           onClick={(e) => handleBookmark(e, dest.id)}
                           className={`flex items-center gap-1.5 transition-all group/btn hover:scale-110 ${dest.bookmarks_count > 0 ? 'text-primary' : ''}`}
                         >
                           <Bookmark className={`w-5 h-5 ${dest.bookmarks_count > 0 ? 'fill-primary shadow-lg' : ''}`} />
-                          <span className="text-xs font-black">{dest.bookmarks_count}</span>
+                          <span className="text-[10px] font-bold">{dest.bookmarks_count}</span>
                         </button>
                       </div>
                     </div>
@@ -244,7 +282,7 @@ export function Community() {
                <h3 className="font-headline text-2xl font-black text-on-surface uppercase opacity-30 italic">No community stories found</h3>
                <p className="font-body text-sm text-text-secondary mt-2 opacity-50">Try different keywords or be the first to share an itinerary!</p>
                <button 
-                onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }}
+                onClick={() => { setSearchQuery(""); setSelectedCategory("All"); setSortBy("Newest"); }}
                 className="mt-8 text-primary font-label text-xs font-black uppercase tracking-[0.2em] hover:underline"
               >
                 Reset All Filters

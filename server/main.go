@@ -20,6 +20,7 @@ func main() {
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+		AllowMethods: "GET, POST, PUT, DELETE, PATCH, OPTIONS",
 	}))
 
 	// Static files for avatars
@@ -70,11 +71,11 @@ func main() {
 	trips.Delete("/note/:itemId", handlers.DeleteNote)
 	trips.Put("/:id/share", handlers.ToggleShareTrip)
 
-	// Community Routes (Public)
+	// Community Routes
 	community := app.Group("/community")
 	community.Get("/trips", handlers.GetPublicTrips)
-	community.Post("/trips/:id/like", handlers.LikeTrip)
-	community.Post("/trips/:id/bookmark", handlers.BookmarkTrip)
+	community.Post("/trips/:id/like", middleware.Auth, handlers.LikeTrip)
+	community.Post("/trips/:id/bookmark", middleware.Auth, handlers.BookmarkTrip)
 
 	log.Fatal(app.Listen(":8080"))
 }

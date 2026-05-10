@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { 
   Search, ArrowRight, 
   Star, Heart, 
-  PlaneTakeoff, Plus, MapPin, MapIcon
+  PlaneTakeoff, Plus, MapPin, MapIcon, ChevronDown, ListFilter
 } from "lucide-react";
 import { useAuth } from "../../utils/auth";
 import { api } from "../../utils/api";
@@ -26,16 +26,17 @@ export function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState("");
   
-  // Search and Filter State
+  // Search, Filter and Sort State
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [sortBy, setSortBy] = useState("Recommended");
 
   useEffect(() => {
     const fetchTrips = async () => {
       try {
         const data = await api("/trips");
         setTrips(data);
-      } catch (_err) {
+      } catch {
         console.error("Failed to fetch trips");
       } finally {
         setLoading(false);
@@ -51,15 +52,39 @@ export function Dashboard() {
 
   const displayName = user?.full_name?.split(' ')[0] || "Traveler";
 
-  // Filtered Destinations Logic
-  const filteredDestinations = useMemo(() => {
-    return featuredDestinations.filter(dest => {
+  // Helper to parse price string for sorting
+  const parsePrice = (priceStr: string) => {
+    return parseFloat(priceStr.replace(/[^0-9.]/g, "")) || 0;
+  };
+
+  // Filtered and Sorted Destinations Logic
+  const processedDestinations = useMemo(() => {
+    // 1. Filter
+    let result = featuredDestinations.filter(dest => {
       const matchesCategory = selectedCategory === "All" || dest.category === selectedCategory;
       const matchesSearch = dest.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            dest.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [searchQuery, selectedCategory]);
+
+    // 2. Sort
+    switch (sortBy) {
+      case "Price: Low to High":
+        result = [...result].sort((a, b) => parsePrice(a.price) - parsePrice(b.price));
+        break;
+      case "Price: High to Low":
+        result = [...result].sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
+        break;
+      case "Rating":
+        result = [...result].sort((a, b) => b.rating - a.rating);
+        break;
+      default:
+        // Recommended / Default
+        break;
+    }
+
+    return result;
+  }, [searchQuery, selectedCategory, sortBy]);
 
   return (
     <div className="flex-1 flex flex-col min-w-0">
@@ -72,7 +97,7 @@ export function Dashboard() {
 
         {/* Hero Banner: Featured Trip */}
         <section className="relative w-full h-[300px] md:h-[400px] rounded-[2.5rem] overflow-hidden shadow-sm flex flex-col justify-end p-6 md:p-12 group" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?q=80&w=2000&auto=format&fit=crop')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
           <div className="relative z-10 text-white max-w-2xl">
             <span className="inline-block px-3 py-1 bg-primary/80 backdrop-blur-md rounded-full font-label text-[10px] font-black uppercase tracking-widest mb-4 text-on-primary">Featured Destination</span>
             <h2 className="font-display text-4xl md:text-6xl font-black text-white mb-4 leading-tight italic uppercase">Santorini, Greece</h2>
@@ -87,11 +112,11 @@ export function Dashboard() {
           </div>
         </section>
 
-        {/* Search Feature - Just below banner */}
-        <section className="relative group max-w-3xl mx-auto w-full -mt-10 z-20 px-4 md:px-0">
+        {/* Search & Sort Feature - Just below banner */}
+        <section className="relative group max-w-4xl mx-auto w-full -mt-10 z-20 px-4 md:px-0">
           <div className="absolute inset-0 bg-primary/20 rounded-[2rem] blur-2xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
-          <div className="relative bg-surface-canvas rounded-[2rem] p-2 shadow-2xl border border-border-subtle flex items-center gap-2">
-            <div className="flex-1 flex items-center px-6 gap-3 border-r border-border-subtle/50">
+          <div className="relative bg-surface-canvas rounded-[2rem] p-2 shadow-2xl border border-border-subtle flex flex-col sm:flex-row items-center gap-2">
+            <div className="flex-1 flex items-center px-6 gap-3 w-full">
               <Search className="text-primary w-6 h-6" />
               <input 
                 type="text" 
@@ -101,12 +126,26 @@ export function Dashboard() {
                 className="w-full py-4 text-lg font-headline font-bold focus:outline-none placeholder:text-text-secondary/30 text-text-primary bg-transparent"
               />
             </div>
-            <button className="bg-primary text-on-primary px-10 py-4 rounded-[1.5rem] font-label text-sm font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg hidden sm:block">
-              Explore
-            </button>
-            <button className="bg-primary text-on-primary p-4 rounded-[1.5rem] sm:hidden">
-              <Search className="w-6 h-6" />
-            </button>
+            
+            <div className="flex items-center gap-2 w-full sm:w-auto px-2 sm:px-0 sm:pr-4 border-t sm:border-t-0 sm:border-l border-border-subtle/50 pt-2 sm:pt-0">
+               <div className="relative flex-1 sm:flex-none min-w-[140px]">
+                  <ListFilter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
+                  <select 
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="w-full bg-surface-background border border-border-subtle rounded-xl pl-9 pr-8 py-2.5 text-xs font-black uppercase tracking-widest focus:ring-2 focus:ring-primary outline-none appearance-none cursor-pointer"
+                  >
+                    <option>Recommended</option>
+                    <option>Price: Low to High</option>
+                    <option>Price: High to Low</option>
+                    <option>Rating</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" />
+               </div>
+               <button className="bg-primary text-on-primary px-8 py-2.5 rounded-xl font-label text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg hidden md:block">
+                Search
+               </button>
+            </div>
           </div>
         </section>
 
@@ -175,9 +214,9 @@ export function Dashboard() {
             </div>
           </div>
 
-          {filteredDestinations.length > 0 ? (
+          {processedDestinations.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {filteredDestinations.map((dest) => (
+              {processedDestinations.map((dest) => (
                 <motion.div
                   key={dest.id}
                   whileHover={{ y: -10 }}
@@ -244,7 +283,7 @@ export function Dashboard() {
               <h3 className="font-headline text-2xl font-black text-on-surface uppercase opacity-30 italic">No destinations matched your search</h3>
               <p className="font-body text-sm text-text-secondary mt-2 opacity-50">Try using different keywords or exploring another category.</p>
               <button 
-                onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }}
+                onClick={() => { setSearchQuery(""); setSelectedCategory("All"); setSortBy("Recommended"); }}
                 className="mt-8 text-primary font-label text-xs font-black uppercase tracking-[0.2em] hover:underline"
               >
                 Reset All Filters
